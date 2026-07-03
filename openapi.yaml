@@ -8,7 +8,7 @@ servers:
   - url: https://wh.shiipp.com
 
 paths:
-  /v1/prealerts:
+  /api/Prealerts:
     post:
       summary: Submit Pre-Alert
       description: Submit a shipment pre-alert.
