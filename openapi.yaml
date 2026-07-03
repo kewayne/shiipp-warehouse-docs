@@ -1,0 +1,74 @@
+openapi: 3.0.3
+
+info:
+  title: AEORAL Public API
+  version: 1.0.0
+
+servers:
+  - url: https://wh.shiipp.com
+
+paths:
+  /v1/prealerts:
+    post:
+      summary: Submit Pre-Alert
+      description: Submit a shipment pre-alert.
+
+      security:
+        - ApiKeyAuth: []
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - UserCode
+                - TrackingNumber
+              properties:
+                UserCode:
+                  type: string
+                  example: AE12345
+
+                TrackingNumber:
+                  type: string
+                  example: 1Z999AA10123456784
+
+                Reference:
+                  type: string
+                  example: ORDER-10025
+
+                Vendor:
+                  type: string
+                  example: Amazon
+
+                Description:
+                  type: string
+                  example: Wireless Keyboard
+
+      responses:
+        "201":
+          description: Pre-alert created
+          content:
+            application/json:
+              schema:
+                type: object
+
+        "400":
+          description: Validation Error
+
+        "401":
+          description: Missing API Key
+
+        "403":
+          description: Invalid API Key
+
+        "409":
+          description: Duplicate Tracking Number
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-KEY
