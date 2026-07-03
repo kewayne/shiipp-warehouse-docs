@@ -5,8 +5,12 @@ info:
   version: 1.0.0
 
 servers:
-  - url: https://wh.shiipp.com
+  - url: https://api.aeoral.com
+    description: Production
 
+  - url: https://staging.api.aeoral.com
+    description: Staging
+    
 paths:
   /api/Prealert:
     post:
