@@ -1,0 +1,94 @@
+---
+title: "How Package Tracking Works in Shiipp"
+sidebarTitle: "Packages"
+description: "Understand how Shiipp logs, tracks, and manages packages from warehouse intake through delivery, including tracking numbers, weights, and statuses."
+---
+
+A package in Shiipp represents a physical parcel that has been received at the warehouse. Every package is tied to a customer, a carrier tracking number, and — once dispatched — a courier partner and flight manifest. Shiipp tracks each package from the moment it is scanned at intake all the way through to final delivery, giving both warehouse staff and courier partners full visibility at every step.
+
+## Package Fields
+
+The following fields make up a package record in Shiipp.
+
+| Field | Description |
+|---|---|
+| `package_id` | Internal UUID that uniquely identifies the package in the system |
+| `tracking_number` | The carrier-assigned tracking number (UPS, FedEx, DHL, etc.) |
+| `house_number` | Internal warehouse reference number |
+| `user_code` | The identifier of the customer this package belongs to |
+| `first_name` / `last_name` | Customer name associated with the package |
+| `weight` | Weight in LBS — KG conversion is shown automatically alongside |
+| `courier_id` | The courier partner this package has been assigned to |
+| `manifest_id` | The flight manifest this package is assigned to, if any |
+| `shipper` / `vendor` | The sender or vendor the package originated from |
+| `description` | A description of the package contents |
+| `entry_date_time` | The date and time the package was logged into the system |
+| `status` | The current status of the package, derived from its assigned manifest |
+
+## Package Lifecycle
+
+Packages move through a defined set of stages from intake to delivery. Use the steps below to understand where a package is at any point in time.
+
+<Steps>
+  <Step title="Received at Warehouse">
+    A physical parcel arrives at your warehouse facility and is ready to be processed.
+  </Step>
+  <Step title="Logged">
+    Warehouse staff scan or enter the carrier tracking number. Shiipp creates a package record and — if a matching prealert exists — automatically pre-fills the customer's details.
+  </Step>
+  <Step title="Assigned to Courier">
+    The package is associated with a courier partner who will be responsible for last-mile delivery.
+  </Step>
+  <Step title="Assigned to Manifest">
+    The package is added to a flight manifest, grouping it with other packages headed to the same destination on the same flight.
+  </Step>
+  <Step title="Manifest Shipped">
+    The manifest status changes to **shipped**, indicating the consolidated shipment has departed. All relevant courier partners are notified automatically.
+  </Step>
+  <Step title="Delivered">
+    The manifest is marked **completed** and delivery is confirmed. The package lifecycle is closed.
+  </Step>
+</Steps>
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="Public Tracking" icon="magnifying-glass">
+    Customers can track their packages at **/track.php** using their carrier tracking number. No login is required.
+  </Card>
+  <Card title="Prealert Matching" icon="bolt">
+    When a package is scanned, Shiipp checks for a matching prealert and pre-fills the customer's name, shipper, and description automatically — eliminating manual data entry.
+  </Card>
+  <Card title="CSV & XLSX Export" icon="file-export">
+    Export any filtered view of your package list to CSV or XLSX format for reporting, reconciliation, or handoff to external systems.
+  </Card>
+  <Card title="Courier Assignment" icon="truck">
+    Packages are linked to a courier partner via `courier_id`, ensuring each courier only sees the packages they are responsible for.
+  </Card>
+</CardGroup>
+
+## Package Status
+
+The `status` field on a package is derived from its assigned manifest. It reflects the highest lifecycle stage the manifest has reached.
+
+<Tabs>
+  <Tab title="No Manifest">
+    The package has been logged but not yet assigned to a manifest. It is sitting in the warehouse awaiting dispatch planning.
+  </Tab>
+  <Tab title="Draft">
+    The package has been added to a manifest that is still being assembled. It can still be moved or removed.
+  </Tab>
+  <Tab title="Ready">
+    The manifest has been finalized. The package is confirmed for dispatch and courier partners have been notified.
+  </Tab>
+  <Tab title="Shipped">
+    The manifest has departed. The package is in transit.
+  </Tab>
+  <Tab title="Completed">
+    Delivery has been confirmed. The package record is closed.
+  </Tab>
+</Tabs>
+
+<Note>
+  Because package status is derived from the manifest, you cannot change a package's status directly. Update the manifest status to move packages forward through the lifecycle.
+</Note>

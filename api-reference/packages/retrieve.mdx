@@ -1,0 +1,294 @@
+---
+title: "Retrieve and Filter Packages via API"
+sidebarTitle: "List Packages"
+description: "POST /api/RetrievePackages.php — query, filter, and paginate packages. Supports export to CSV and XLSX. JWT Bearer token required."
+---
+
+The **RetrievePackages** endpoint lets you query, filter, and paginate packages stored in your Shiipp warehouse. You can narrow results by tracking number, customer details, courier, carrier, and entry date range — or export the full result set to a CSV or XLSX file for offline reporting.
+
+## Endpoint
+
+```
+POST /api/RetrievePackages.php
+```
+
+**Authentication:** JWT Bearer token required. Include the token in the `Authorization` header.
+
+```
+Authorization: Bearer <your_token>
+```
+
+---
+
+## Request Body
+
+All filters are passed as JSON in the request body.
+
+<ParamField body="page" type="integer" default="1">
+  Page number for paginated results. Starts at `1`.
+</ParamField>
+
+<ParamField body="limit" type="integer" default="25">
+  Number of records to return per page. Maximum value is `10000`. When `export` is `true`, this limit applies to the exported file as well.
+</ParamField>
+
+<ParamField body="trackingNumber" type="string">
+  Filter by tracking number using a **partial match**. For example, `"1Z9999"` matches any tracking number containing that string.
+</ParamField>
+
+<ParamField body="houseNumber" type="string">
+  Filter by house number using an **exact match**.
+</ParamField>
+
+<ParamField body="userCode" type="string">
+  Filter by customer user code using an **exact match**.
+</ParamField>
+
+<ParamField body="shipper" type="string">
+  Filter by shipper name using a **partial match** (e.g., `"Amazon"` matches `"Amazon Fulfillment"`).
+</ParamField>
+
+<ParamField body="firstName" type="string">
+  Filter by customer first name using a **partial match**.
+</ParamField>
+
+<ParamField body="lastName" type="string">
+  Filter by customer last name using a **partial match**.
+</ParamField>
+
+<ParamField body="courierID" type="string">
+  Filter results to packages belonging to a specific courier, identified by their courier ID.
+</ParamField>
+
+<ParamField body="carrierID" type="string">
+  Filter results to packages shipped via a specific carrier, identified by their carrier ID.
+</ParamField>
+
+<ParamField body="entryDateFloor" type="string">
+  Return only packages with an entry date **on or after** this date. Format: `YYYY-MM-DD`.
+</ParamField>
+
+<ParamField body="entryDateCeiling" type="string">
+  Return only packages with an entry date **on or before** this date. Format: `YYYY-MM-DD`.
+</ParamField>
+
+<ParamField body="export" type="boolean">
+  Set to `true` to receive a file download instead of a JSON response. When enabled, the response will be a binary file attachment.
+</ParamField>
+
+<ParamField body="export_format" type="string">
+  The format of the exported file. Accepted values: `csv` (default) or `xlsx`. Only relevant when `export` is `true`.
+</ParamField>
+
+---
+
+## Example Request
+
+<CodeGroup>
+
+```json JSON Body
+{
+  "page": 1,
+  "limit": 25,
+  "trackingNumber": "1Z9999",
+  "entryDateFloor": "2024-01-01",
+  "entryDateCeiling": "2024-01-31"
+}
+```
+
+```bash cURL
+curl -X POST https://app.shiipp.com/api/RetrievePackages.php \
+  -H "Authorization: Bearer <your_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "page": 1,
+    "limit": 25,
+    "trackingNumber": "1Z9999",
+    "entryDateFloor": "2024-01-01",
+    "entryDateCeiling": "2024-01-31"
+  }'
+```
+
+</CodeGroup>
+
+---
+
+## Response
+
+### Success Response
+
+```json
+{
+  "status": "success",
+  "message": "Found 47 records.",
+  "data": [
+    {
+      "package_id": "pkg-uuid",
+      "tracking_number": "1Z9999999999999999",
+      "house_number": "HN-00142",
+      "user_code": "CUST001",
+      "first_name": "Jane",
+      "last_name": "Smith",
+      "weight": 3.5,
+      "shipper": "Amazon",
+      "description": "Electronics",
+      "entry_date_time": "2024-01-15 09:22:11",
+      "courier_name": "SkyDrop",
+      "carrier_name": "UPS",
+      "manifest_number": "MAN-20240115-A3B2",
+      "status": "shipped"
+    }
+  ],
+  "meta": {
+    "total_count": 47,
+    "total_weight": 142.5,
+    "page": 1,
+    "limit": 25,
+    "total_pages": 2
+  }
+}
+```
+
+### Response Fields
+
+<ResponseField name="status" type="string">
+  Indicates the outcome of the request. Will be `"success"` on a valid response.
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  A human-readable summary, including the total number of records matched.
+</ResponseField>
+
+<ResponseField name="data" type="array">
+  Array of package objects matching the supplied filters.
+
+  <Expandable title="Package object fields">
+    <ResponseField name="package_id" type="string">
+      Unique UUID identifying the package.
+    </ResponseField>
+    <ResponseField name="tracking_number" type="string">
+      The carrier tracking number. May be partially masked for courier role users when the package owner is unknown.
+    </ResponseField>
+    <ResponseField name="house_number" type="string">
+      Internal house reference number assigned at intake.
+    </ResponseField>
+    <ResponseField name="user_code" type="string">
+      The customer's unique user code.
+    </ResponseField>
+    <ResponseField name="first_name" type="string">
+      Customer's first name.
+    </ResponseField>
+    <ResponseField name="last_name" type="string">
+      Customer's last name.
+    </ResponseField>
+    <ResponseField name="weight" type="number">
+      Package weight in pounds (LBS).
+    </ResponseField>
+    <ResponseField name="shipper" type="string">
+      The name of the shipper or sender.
+    </ResponseField>
+    <ResponseField name="description" type="string">
+      A brief description of the package contents.
+    </ResponseField>
+    <ResponseField name="entry_date_time" type="string">
+      Timestamp when the package was entered into the system. Format: `YYYY-MM-DD HH:MM:SS`.
+    </ResponseField>
+    <ResponseField name="courier_name" type="string">
+      Name of the courier responsible for last-mile delivery.
+    </ResponseField>
+    <ResponseField name="carrier_name" type="string">
+      Name of the inbound carrier (e.g., UPS, FedEx).
+    </ResponseField>
+    <ResponseField name="manifest_number" type="string">
+      The manifest number this package was grouped under.
+    </ResponseField>
+    <ResponseField name="status" type="string">
+      Current package status (e.g., `received`, `in_transit`, `shipped`, `delivered`).
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="meta" type="object">
+  Pagination and aggregate metadata.
+
+  <Expandable title="Meta object fields">
+    <ResponseField name="total_count" type="integer">
+      Total number of packages matching the filters across all pages.
+    </ResponseField>
+    <ResponseField name="total_weight" type="number">
+      Sum of weights (in LBS) for all matched packages.
+    </ResponseField>
+    <ResponseField name="page" type="integer">
+      The current page number returned.
+    </ResponseField>
+    <ResponseField name="limit" type="integer">
+      The page size used for this response.
+    </ResponseField>
+    <ResponseField name="total_pages" type="integer">
+      Total number of pages available given the current `limit`.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+---
+
+## File Export
+
+Set `export: true` in the request body to download the filtered results as a file instead of receiving JSON. The response will include the appropriate `Content-Disposition` header and a binary file payload.
+
+<Tabs>
+  <Tab title="CSV Export">
+    ```json
+    {
+      "export": true,
+      "export_format": "csv",
+      "entryDateFloor": "2024-01-01",
+      "entryDateCeiling": "2024-01-31"
+    }
+    ```
+  </Tab>
+  <Tab title="XLSX Export">
+    ```json
+    {
+      "export": true,
+      "export_format": "xlsx",
+      "entryDateFloor": "2024-01-01",
+      "entryDateCeiling": "2024-01-31"
+    }
+    ```
+  </Tab>
+</Tabs>
+
+The exported file includes the following columns:
+
+| Column | Description |
+|---|---|
+| User Code | Customer user code |
+| Package ID | Unique package UUID |
+| Tracking Number | Carrier tracking number |
+| House Number | Internal house reference |
+| First Name | Customer first name |
+| Last Name | Customer last name |
+| Courier | Assigned courier name |
+| Carrier | Inbound carrier name |
+| Shipper | Shipper / sender name |
+| Weight | Package weight (LBS) |
+| Status | Current package status |
+| Manifest Number | Associated manifest number |
+| Entry Date Time | Date and time of intake |
+
+<Tip>
+  Use `export_format: "xlsx"` when sharing reports with non-technical stakeholders — Excel files preserve column types and are easier to filter in spreadsheet applications.
+</Tip>
+
+---
+
+## Role-Based Access
+
+<Note>
+  **Courier role users** can only retrieve packages that belong to their own courier account. Attempts to filter by a `courierID` outside their account are ignored and scoped back automatically.
+</Note>
+
+<Warning>
+  Tracking numbers for packages with **unknown or unassigned customers** are partially masked when returned to courier role users. Full tracking numbers are always visible to admin and manager roles.
+</Warning>

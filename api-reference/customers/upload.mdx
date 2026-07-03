@@ -1,0 +1,158 @@
+---
+title: "Bulk Import Customers from a CSV File"
+sidebarTitle: "Upload Customers"
+description: "POST /api/UploadCustomers.php — upload a CSV file to add or update customer records in bulk. Requires customer:add permission."
+---
+
+The **UploadCustomers** endpoint lets you import or update large numbers of customer records in a single request by uploading a CSV file. The operation uses an **upsert** strategy — existing customers matched by `user_code` are updated in place, while unrecognized user codes create new records. All processing happens inside a single database transaction, so a failure on any row rolls back the entire batch.
+
+## Endpoint
+
+```
+POST /api/UploadCustomers.php
+```
+
+**Authentication:** JWT Bearer token with `customer:add` permission required.
+
+```
+Authorization: Bearer <your_token>
+```
+
+**Content-Type:** `multipart/form-data`
+
+---
+
+## Form Fields
+
+<ParamField body="file" type="file" required>
+  The CSV file to upload. Must be a valid `.csv` file with at least 3 data columns. The first row is treated as a header and is skipped during processing.
+</ParamField>
+
+<ParamField body="target_courier_id" type="string">
+  The UUID of the courier organization to assign the imported customers to. **Required for admin and manager roles.** Courier role users have this field auto-set to their own account — passing it explicitly is not necessary and will be ignored.
+</ParamField>
+
+---
+
+## CSV Format
+
+The file must follow this column order. The first row (header row) is always skipped.
+
+| Column | Required | Description |
+|---|---|---|
+| `user_code` | Yes | Unique customer identifier within the courier account |
+| `first_name` | Yes | Customer's first name |
+| `last_name` | Yes | Customer's last name |
+| `branch` | No | Branch or pickup location (leave blank if not applicable) |
+
+### Example CSV
+
+```csv
+user_code,first_name,last_name,branch
+CUST001,Jane,Smith,Kingston
+CUST002,Marcus,Brown,Montego Bay
+CUST003,Alicia,Thompson,
+```
+
+<Note>
+  The `branch` column is optional. You may omit it entirely or leave the value blank for individual rows — both are handled correctly.
+</Note>
+
+---
+
+## Example Request
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://app.shiipp.com/api/UploadCustomers.php \
+  -H "Authorization: Bearer <your_token>" \
+  -F "file=@customers.csv" \
+  -F "target_courier_id=courier-uuid-here"
+```
+
+```bash cURL (Courier Role — No courier_id needed)
+curl -X POST https://app.shiipp.com/api/UploadCustomers.php \
+  -H "Authorization: Bearer <your_token>" \
+  -F "file=@customers.csv"
+```
+
+</CodeGroup>
+
+---
+
+## Response
+
+### Success
+
+```json
+{
+  "status": "success",
+  "message": "Successfully processed 3 records (Upsert complete).",
+  "data": {
+    "processed": 3
+  }
+}
+```
+
+<ResponseField name="status" type="string">
+  `"success"` when all rows in the file were processed without error.
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  A human-readable summary indicating how many records were processed.
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  <Expandable title="data fields">
+    <ResponseField name="processed" type="integer">
+      The number of rows that were successfully inserted or updated. Skipped rows (e.g., those with fewer than 3 columns) are not counted.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+---
+
+## Upsert Behavior
+
+The import uses `user_code` as the unique key to determine whether a row creates a new customer or updates an existing one.
+
+<Tabs>
+  <Tab title="New Customer (INSERT)">
+    If no customer with the provided `user_code` exists in the courier account, a new customer record is created with the supplied `first_name`, `last_name`, and optional `branch`.
+  </Tab>
+  <Tab title="Existing Customer (UPDATE)">
+    If a customer with the provided `user_code` already exists, their `first_name`, `last_name`, and `branch` fields are updated to the values in the CSV row. No duplicate records are created.
+  </Tab>
+</Tabs>
+
+---
+
+## Validation and Error Handling
+
+<Warning>
+  All rows are processed inside a **single database transaction**. If any row causes an error during processing, the entire import is rolled back — no records are created or updated. Fix the offending row and re-upload the full file.
+</Warning>
+
+The following rows are silently skipped and do not trigger a rollback:
+
+- Rows with **fewer than 3 columns** (missing `user_code`, `first_name`, or `last_name`)
+- The **header row** (first row of the file)
+
+<Tip>
+  Before uploading large files, validate your CSV locally to ensure every data row has at least 3 non-empty columns. A single malformed row will cause the entire batch to fail due to the transactional processing model.
+</Tip>
+
+---
+
+## Role-Based Access
+
+<Note>
+  **Courier role users** do not need to provide `target_courier_id` — all imported customers are automatically assigned to their own courier account. Admin and manager users **must** supply `target_courier_id` to specify which courier the customers belong to.
+</Note>
+
+| Role | `target_courier_id` |
+|---|---|
+| Courier | Auto-set; field is ignored if provided |
+| Manager | Required |
+| Admin | Required |

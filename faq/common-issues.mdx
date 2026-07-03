@@ -1,0 +1,61 @@
+---
+title: "Frequently Asked Questions About Shiipp"
+sidebarTitle: "Common Issues"
+description: "Answers to the most common questions from Shiipp users — covering login, packages, prealerts, customer codes, manifests, and billing."
+---
+
+Whether you're just getting started or running into something unexpected, the questions below cover the most common situations Shiipp users encounter — from signing in and locating packages to managing billing and rotating API keys.
+
+<Accordion title="How do I log in?">
+  Visit your Shiipp URL and enter your username and password. If two-factor authentication (2FA) is enabled on your account, you'll be prompted to enter the 6-digit code from your authenticator app after submitting your credentials. If you've forgotten your password, click **Forgot Password** on the login page to receive a reset email.
+</Accordion>
+
+<Accordion title="My login is rejected but my password is correct">
+  There are a few reasons a valid password might still result in a failed login:
+
+  - **Disabled account** — your account may have been disabled by your administrator. Contact them to re-enable access.
+  - **2FA timing issue** — the 6-digit code from your authenticator app is time-sensitive. Make sure your device clock is correctly synced; even a small drift can cause the code to be rejected.
+  - **Lost authenticator access** — if you no longer have access to your authenticator app, use one of your backup codes to sign in, then reconfigure 2FA.
+</Accordion>
+
+<Accordion title="How do I find a package?">
+  Go to **Packages** and use the search filters to narrow down results. You can filter by tracking number, user code, courier, date range, shipper, or recipient name. Once you've applied your filters, you can also export the results to **CSV** or **XLSX** for offline review or reporting.
+</Accordion>
+
+<Accordion title="A package shows as Unknown — what does that mean?">
+  A package marked **Unknown** was received at the warehouse but couldn't be matched to a customer user code. These packages appear in the **Exceptions** panel on your dashboard.
+
+  To resolve it, edit the package inline and assign the correct user code. Going forward, you can prevent this entirely by submitting a prealert before the package arrives — this links the tracking number to a customer in advance, so the match happens automatically on receipt.
+
+  <Tip>
+    Submitting prealerts before packages arrive is the most reliable way to avoid Unknown packages and keep your exception queue clear.
+  </Tip>
+</Accordion>
+
+<Accordion title="My prealert returned a 409 error">
+  A **409 Conflict** response means a prealert for that tracking number already exists under your courier account. Check whether you submitted it previously, or whether it was auto-created when the warehouse scanned the package. No action is needed if the prealert is already on record.
+</Accordion>
+
+<Accordion title="Packages aren't showing up under my courier account">
+  First, verify that the package's `courier_id` matches your courier account. If you see packages with a **UNK** courier code, those are unassigned — they haven't been linked to any courier account yet. Contact your warehouse to have them reassigned to your account.
+</Accordion>
+
+<Accordion title="How do I update my courier profile?">
+  Go to **Courier Settings** from the sidebar. From there you can update your company name, contact information, and webhook endpoint URLs. Changes take effect immediately after saving.
+</Accordion>
+
+<Accordion title="How do I view my invoices?">
+  Go to **Billing > My Bills** in the dashboard. Any invoice in **Published** or **Paid** status is visible and available for download. If you don't see an expected invoice, contact your warehouse administrator to confirm it has been published.
+</Accordion>
+
+<Accordion title="When will my packages ship?">
+  Your warehouse manager groups packages into a manifest and marks it as **Shipped** when the flight departs. You receive an email notification each time a manifest's status changes to **Ready**, **Shipped**, or **Completed** — so you're kept informed at every stage without needing to check manually.
+</Accordion>
+
+<Accordion title="How do I rotate my API key?">
+  Go to **Courier Settings > API Configuration** and click **Regenerate API Key**.
+
+  <Warning>
+    The old key is invalidated immediately when you regenerate. Update all of your integrations with the new key before rotating — otherwise any systems using the old key will stop working right away.
+  </Warning>
+</Accordion>

@@ -1,0 +1,142 @@
+---
+title: "Generate and Manage Courier Billing in Shiipp"
+sidebarTitle: "Billing & Invoicing"
+description: "Learn how Shiipp calculates package fees by weight tier, generates invoices for courier partners, and manages payment status and billing history."
+---
+
+Shiipp calculates charges for courier partners automatically based on the weight of each package and the rate tiers you configure. Once a billing period closes, you can generate a preview, apply adjustments, publish the invoice to the courier's dashboard, and record payment — all without leaving Shiipp.
+
+<Note>
+  This guide is for **Managers and Admins**. Rate configuration requires the Admin role. Generating and publishing invoices requires at least the Manager role.
+</Note>
+
+## How Billing Works
+
+Shiipp uses a **weight tier** model. You define a set of weight ranges, each with a flat fee. When an invoice is generated, every package in the billing period is matched to the tier that covers its actual weight, and the corresponding fee is applied.
+
+<Accordion title="Example weight tier table">
+  | Weight range | Flat fee |
+  |---|---|
+  | 0 – 5 LBS | $5.00 |
+  | 5 – 15 LBS | $10.00 |
+  | 15 – 30 LBS | $18.00 |
+  | 30 LBS+ | $25.00 |
+
+  These are illustrative values. Your actual tiers are configured in **Accounting > Rate Configuration**.
+</Accordion>
+
+You can also add an **air freight rate** — a flat per-pound or per-kilogram surcharge applied on top of the tier fee. This is configured per courier and is optional.
+
+**Global vs. courier-specific rates:** Global default rates apply to all couriers unless you define a custom rate table for a specific courier. Custom rates always take precedence.
+
+---
+
+## Configuring Rates
+
+<Steps>
+  <Step title="Open Rate Configuration">
+    Go to **Accounting > Rate Configuration** in the sidebar.
+  </Step>
+
+  <Step title="Choose global or courier-specific rates">
+    To edit rates that apply to all couriers by default, stay on the **Global Defaults** tab. To set rates for a specific courier, select that courier from the dropdown.
+  </Step>
+
+  <Step title="Add, edit, or delete weight tiers">
+    Use the rate table to manage tiers:
+
+    - Click **Add Row** to create a new weight range. Enter the start weight, end weight, and flat fee.
+    - Click any existing row to edit its values inline.
+    - Click the **delete** icon on a row to remove that tier.
+
+    Make sure your tiers cover the full range of package weights you handle. Gaps in coverage can cause packages to go unmatched during invoice generation.
+  </Step>
+
+  <Step title="Copy global defaults to a courier (optional)">
+    If you want a courier's rates to start from the global defaults and then be customized, click **Copy Global Defaults** while viewing that courier's rate table. This populates their table with the current global values, which you can then modify.
+  </Step>
+
+  <Step title="Set the air freight rate (optional)">
+    Enter a value in the **Air Freight Rate** field to add a per-unit surcharge on top of tier fees for this courier. Leave the field blank to skip this surcharge.
+  </Step>
+
+  <Step title="Save your changes">
+    Click **Save**. Updated rates apply to any invoices generated after this point. Previously published invoices are not retroactively recalculated.
+  </Step>
+</Steps>
+
+---
+
+## Generating an Invoice
+
+<Steps>
+  <Step title="Open Courier Bills">
+    Go to **Accounting > Courier Bills** and select the courier you want to invoice.
+  </Step>
+
+  <Step title="Set the billing date range">
+    Enter a **Start Date** and **End Date**. Shiipp includes all packages logged within this range, based on their intake date.
+  </Step>
+
+  <Step title="Generate the invoice preview">
+    Click **Generate Invoice Preview**. Shiipp:
+
+    1. Fetches all packages in the date range for this courier
+    2. Matches each package to the appropriate weight tier
+    3. Applies any air freight surcharge
+    4. Calculates total fees
+
+    The preview displays a full breakdown before anything is published.
+  </Step>
+
+  <Step title="Review the invoice summary">
+    Check the summary panel for:
+
+    - **Total packages** included
+    - **Total weight** (LBS and KG)
+    - **Total fees** due
+    - **Per-tier breakdown** showing how many packages fell into each rate tier
+  </Step>
+
+  <Step title="Apply manual adjustments (optional)">
+    Click **Add Adjustment** to include line items that fall outside the standard tier calculation:
+
+    - Transportation surcharges
+    - Packaging materials
+    - Discounts or credits
+
+    Each adjustment requires a description and an amount (positive for charges, negative for credits).
+  </Step>
+
+  <Step title="Publish the invoice">
+    Click **Publish**. The invoice status changes to **Published** and becomes visible to the courier in their own dashboard. They can view the full breakdown and download a copy.
+  </Step>
+
+  <Step title="Mark as Paid">
+    When you receive payment, open the invoice and click **Mark as Paid**. Shiipp records the payment date and updates the status to **Paid**.
+  </Step>
+</Steps>
+
+---
+
+## Invoice Statuses
+
+| Status | Meaning |
+|---|---|
+| **Draft** | Being prepared — not yet visible to the courier |
+| **Published** | Courier can view and download the invoice |
+| **Paid** | Payment has been recorded |
+
+<Warning>
+  Publishing an invoice is not reversible through the standard interface. Double-check your date range, package count, and adjustments before clicking **Publish**.
+</Warning>
+
+<Tip>
+  Couriers can view their own bill history and download invoices directly from their dashboard. They only ever see their own records — never another courier's billing data.
+</Tip>
+
+---
+
+## Invoice Ninja Integration
+
+If your Shiipp account is configured with an Invoice Ninja connection, you can push published invoices to Invoice Ninja for external accounting. Look for the **Sync to Invoice Ninja** button on the invoice detail page. Contact your Shiipp administrator to enable this integration.

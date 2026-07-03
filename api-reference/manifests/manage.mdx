@@ -1,0 +1,191 @@
+---
+title: "Manage Manifests: Status, Packages, and Metadata"
+sidebarTitle: "Manage Manifests"
+description: "POST /api/ManageManifest.php — action-based endpoint to create manifests, update metadata, add/remove packages, and change dispatch status."
+---
+
+The Manage Manifests endpoint is the primary mutation surface for the manifest lifecycle in Shiipp. Rather than exposing separate routes for each operation, it uses a single `action` field to route the request to the appropriate handler — covering everything from manifest creation and metadata updates to package assignment and final deletion. All mutating operations are recorded in the manifest audit trail.
+
+## Endpoint
+
+```
+POST /api/ManageManifest.php
+```
+
+## Authentication
+
+All requests must include a valid JWT Bearer token in the `Authorization` header.
+
+```
+Authorization: Bearer <your_jwt_token>
+```
+
+## Request Structure
+
+Every request must include an `action` field that identifies the operation to perform. Additional fields are required or optional depending on the chosen action.
+
+<ParamField body="action" type="string" required>
+  The operation to execute. One of: `create_manifest`, `update_meta`, `add_packages`, `remove_packages`, `delete_manifest`.
+</ParamField>
+
+---
+
+## Actions
+
+<Tabs>
+  <Tab title="create_manifest">
+    Creates a new manifest. This action mirrors the behavior of [POST /api/CreateManifest.php](/api-reference/manifests/create) and is provided for workflows that prefer a single endpoint.
+
+    **Additional fields:**
+
+    <ParamField body="awb_number" type="string">
+      Air Waybill number. Triggers automatic airline prefix detection.
+    </ParamField>
+
+    <ParamField body="airline_prefix" type="string">
+      Explicit airline prefix override. Ignored when `awb_number` is provided.
+    </ParamField>
+
+    <ParamField body="flight_date" type="string">
+      Scheduled flight date in `YYYY-MM-DD` format.
+    </ParamField>
+
+    <ParamField body="notes" type="string">
+      Initial notes to store on the manifest record.
+    </ParamField>
+
+    <ParamField body="warehouse_id" type="string">
+      UUID of the target warehouse. Defaults to the tenant's primary warehouse.
+    </ParamField>
+
+    **Response `data`:** `manifest_id`, `manifest_number`, `status: "draft"`.
+  </Tab>
+
+  <Tab title="update_meta">
+    Updates metadata fields and/or the lifecycle status of an existing manifest. Status transitions trigger email notifications and audit log entries.
+
+    **Required fields:**
+
+    <ParamField body="manifest_id" type="string" required>
+      UUID of the manifest to update.
+    </ParamField>
+
+    **Optional update fields:**
+
+    <ParamField body="status" type="string">
+      New lifecycle status. Valid transitions: `draft → ready → shipped → completed`. Advancing to `ready`, `shipped`, or `completed` sends email notifications to relevant courier partners.
+    </ParamField>
+
+    <ParamField body="awb_number" type="string">
+      Updated Air Waybill number.
+    </ParamField>
+
+    <ParamField body="airline_prefix" type="string">
+      Updated airline prefix code.
+    </ParamField>
+
+    <ParamField body="flight_date" type="string">
+      Updated flight date in `YYYY-MM-DD` format.
+    </ParamField>
+
+    <ParamField body="flight_number" type="string">
+      Airline flight number (e.g., `AA123`).
+    </ParamField>
+
+    <ParamField body="notes" type="string">
+      Updated notes to store on the manifest record.
+    </ParamField>
+
+    <ParamField body="remarks" type="string">
+      Remarks to append to the audit log entry for this update.
+    </ParamField>
+  </Tab>
+
+  <Tab title="add_packages">
+    Assigns one or more packages to a manifest. Packages must currently be unassigned (in available status).
+
+    <ParamField body="manifest_id" type="string" required>
+      UUID of the target manifest.
+    </ParamField>
+
+    <ParamField body="package_ids" type="array" required>
+      Array of package UUIDs to assign to the manifest. All UUIDs must belong to the same tenant.
+    </ParamField>
+  </Tab>
+
+  <Tab title="remove_packages">
+    Dissociates one or more packages from a manifest, returning them to available status. This does not delete the packages.
+
+    <ParamField body="manifest_id" type="string" required>
+      UUID of the manifest to remove packages from.
+    </ParamField>
+
+    <ParamField body="package_ids" type="array" required>
+      Array of package UUIDs to dissociate from the manifest.
+    </ParamField>
+  </Tab>
+
+  <Tab title="delete_manifest">
+    Permanently deletes a manifest record. The manifest must have no packages attached before deletion is permitted.
+
+    <ParamField body="manifest_id" type="string" required>
+      UUID of the manifest to delete.
+    </ParamField>
+
+    <Warning>
+      Deletion is permanent and cannot be undone. Use `remove_packages` to detach all packages before calling this action. Attempting to delete a manifest that still has packages returns a `400` error.
+    </Warning>
+  </Tab>
+</Tabs>
+
+---
+
+## Example Request — Change Status to Shipped
+
+```json
+{
+  "action": "update_meta",
+  "manifest_id": "abc123def456",
+  "status": "shipped",
+  "remarks": "Flight AA123 departed on schedule"
+}
+```
+
+```bash
+curl -X POST https://app.shiipp.com/api/ManageManifest.php \
+  -H "Authorization: Bearer <your_jwt_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "update_meta",
+    "manifest_id": "abc123def456",
+    "status": "shipped",
+    "remarks": "Flight AA123 departed on schedule"
+  }'
+```
+
+## Success Response
+
+```json
+{
+  "status": "success",
+  "message": "Manifest operation completed successfully",
+  "timestamp": "2024-01-20 14:35:00"
+}
+```
+
+## Error Responses
+
+| HTTP Code | Cause |
+|-----------|-------|
+| `400` | `manifest_id` is missing or the `action` value is not recognized |
+| `400` | Attempting to delete a manifest that still has packages attached |
+| `401` | Missing or invalid JWT token |
+| `404` | No manifest found for the provided `manifest_id` |
+
+<Note>
+  Email notifications to courier partners are dispatched after the database transaction commits successfully. Delivery failures are logged in Shiipp's internal notification log but do not affect the API response — a `200` is returned regardless of email delivery outcome.
+</Note>
+
+<Tip>
+  Use the `remarks` field on any `update_meta` call to leave a human-readable note in the audit trail. This is especially useful when advancing status to `shipped` or `completed` to capture flight details or operator sign-off notes.
+</Tip>

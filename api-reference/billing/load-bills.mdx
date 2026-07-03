@@ -1,0 +1,149 @@
+---
+title: "Load Courier Billing History and Invoices"
+sidebarTitle: "Load Bills"
+description: "GET /api/LoadCourierBills.php — retrieve billing history with totals, tax, paid amounts, and invoice status. Courier role is scoped to own records."
+---
+
+The Load Bills endpoint returns the complete billing history for courier invoices managed within Shiipp, including computed totals, tax amounts, payment records, and current invoice status. Access is automatically scoped by role: courier users see only their own billing records, while admin and manager roles have visibility across all couriers in the tenant.
+
+## Endpoint
+
+```
+GET /api/LoadCourierBills.php
+```
+
+## Authentication
+
+All requests must include a valid JWT Bearer token in the `Authorization` header.
+
+```
+Authorization: Bearer <your_jwt_token>
+```
+
+## Role-Based Scoping
+
+<Tabs>
+  <Tab title="Admin / Manager">
+    Receives the full billing history for all couriers in the tenant. Results are ordered by `created_at` descending.
+  </Tab>
+  <Tab title="Courier">
+    Receives only the invoices associated with their own courier account. `draft` status invoices are typically filtered out — see the note below.
+  </Tab>
+</Tabs>
+
+## Example Request
+
+```bash
+curl https://app.shiipp.com/api/LoadCourierBills.php \
+  -H "Authorization: Bearer <your_jwt_token>"
+```
+
+## Response
+
+### 200 — Success
+
+```json
+{
+  "status": "success",
+  "count": 5,
+  "data": [
+    {
+      "bill_id": "bill-uuid",
+      "invoice_number": "INV-2024-001",
+      "courier_id": "courier-uuid",
+      "courier_name": "SkyDrop",
+      "courier_code": "SKY",
+      "service_type": "Air Standard",
+      "start_date": "2024-01-01",
+      "end_date": "2024-01-31",
+      "total_packages": 47,
+      "subtotal": 348.00,
+      "tax_amount": 34.80,
+      "total_amount": 382.80,
+      "paid_amount": 382.80,
+      "status": "paid",
+      "created_at": "2024-02-01 09:00:00"
+    }
+  ]
+}
+```
+
+## Response Fields
+
+<ResponseField name="count" type="integer">
+  Total number of bill records returned in this response.
+</ResponseField>
+
+<ResponseField name="data" type="array">
+  Array of invoice objects.
+  <Expandable title="bill fields">
+    <ResponseField name="bill_id" type="string">
+      Unique UUID for the billing record.
+    </ResponseField>
+
+    <ResponseField name="invoice_number" type="string">
+      Human-readable invoice identifier (e.g., `INV-2024-001`), used on printed and emailed invoices.
+    </ResponseField>
+
+    <ResponseField name="courier_name" type="string">
+      Display name of the invoiced courier.
+    </ResponseField>
+
+    <ResponseField name="courier_code" type="string">
+      Short alphanumeric code identifying the courier (e.g., `SKY`).
+    </ResponseField>
+
+    <ResponseField name="service_type" type="string">
+      The service level associated with this billing period (e.g., `Air Standard`, `Express`).
+    </ResponseField>
+
+    <ResponseField name="start_date" type="string">
+      Start of the billing period in `YYYY-MM-DD` format.
+    </ResponseField>
+
+    <ResponseField name="end_date" type="string">
+      End of the billing period in `YYYY-MM-DD` format.
+    </ResponseField>
+
+    <ResponseField name="total_packages" type="integer">
+      Number of packages included in this invoice.
+    </ResponseField>
+
+    <ResponseField name="subtotal" type="number">
+      Sum of all package fees before tax is applied.
+    </ResponseField>
+
+    <ResponseField name="tax_amount" type="number">
+      Tax amount applied to the subtotal.
+    </ResponseField>
+
+    <ResponseField name="total_amount" type="number">
+      Final invoice total (`subtotal + tax_amount`).
+    </ResponseField>
+
+    <ResponseField name="paid_amount" type="number">
+      Cumulative sum of all payments recorded against this invoice. To compute the outstanding balance, subtract `paid_amount` from `total_amount`.
+    </ResponseField>
+
+    <ResponseField name="status" type="string">
+      Current invoice status. One of:
+      - `draft` — invoice has been computed but not yet published
+      - `published` — invoice has been finalized and sent to the courier
+      - `paid` — full payment has been recorded
+    </ResponseField>
+
+    <ResponseField name="created_at" type="string">
+      UTC timestamp of when the invoice was created, in `YYYY-MM-DD HH:MM:SS` format.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Notes
+
+<Tip>
+  To compute the outstanding balance on any invoice, subtract `paid_amount` from `total_amount`. A result of `0.00` indicates the invoice is fully settled, which will also be reflected by `status: "paid"`.
+</Tip>
+
+<Note>
+  Courier role users typically see only `published` and `paid` invoices. `draft` invoices are hidden from couriers until they are finalized and published by an admin or manager through the billing UI.
+</Note>

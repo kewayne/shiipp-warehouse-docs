@@ -1,0 +1,313 @@
+---
+title: "Manage Prealerts: List, Update, and Delete"
+sidebarTitle: "Manage Prealerts"
+description: "GET, POST, PUT, and DELETE /api/ManagePrealerts.php — list, filter, create, update, and remove prealerts. JWT Bearer auth required."
+---
+
+The `/api/ManagePrealerts.php` endpoint is the internal management interface for prealert records. It supports all four HTTP methods — `GET` to list and filter, `POST` to create, `PUT` to update, and `DELETE` to remove. All operations require a valid JWT Bearer token. Role-based access control is enforced automatically: users with the `courier` role can only see and modify records that belong to their own courier account, while `admin` and `manager` roles have cross-courier visibility.
+
+## Endpoint
+
+```
+/api/ManagePrealerts.php
+```
+
+**Authentication:** `Authorization: Bearer <access_token>` — obtain your token from [POST /api/login.php](/api-reference/authentication#obtaining-a-jwt-token).
+
+**Supported methods:** `GET` · `POST` · `PUT` · `DELETE`
+
+---
+
+## GET — List Prealerts
+
+Retrieve a paginated, filterable list of prealert records. Courier-role users automatically see only records tied to their courier account.
+
+### Query Parameters
+
+<ParamField query="page" type="integer" default="1">
+  The page number to retrieve. Starts at `1`.
+</ParamField>
+
+<ParamField query="limit" type="integer" default="50">
+  Number of records per page. Maximum `500`.
+</ParamField>
+
+<ParamField query="sort_by" type="string">
+  Field to sort results by. Accepted values: `created_at`, `status`, `tracking_number`, `vendor`, `user_code`. Defaults to `created_at`.
+</ParamField>
+
+<ParamField query="sort_dir" type="string" default="DESC">
+  Sort direction. Accepted values: `ASC`, `DESC`.
+</ParamField>
+
+<ParamField query="status" type="string">
+  Filter by prealert status. Accepted values: `pending`, `received`, `flagged`. Omit to return all statuses.
+</ParamField>
+
+<ParamField query="search" type="string">
+  Free-text search across tracking number, user code, vendor name, and customer first/last name.
+</ParamField>
+
+<ParamField query="courier_id" type="string">
+  Filter results to a specific courier by UUID. **Admin and manager roles only** — this parameter is ignored for courier-role tokens.
+</ParamField>
+
+### Example Request
+
+```bash cURL
+curl "https://your-domain.com/api/ManagePrealerts.php?page=1&limit=50&status=pending&search=Amazon" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+### Response
+
+```json
+{
+  "status": "success",
+  "message": "Prealerts fetched successfully",
+  "data": [
+    {
+      "prealert_id": "abc123",
+      "courier_id": "courier-uuid",
+      "user_code": "CUST001",
+      "tracking_number": "1Z9999999999999999",
+      "vendor": "Amazon",
+      "description": "Electronics",
+      "status": "pending",
+      "created_at": "2024-01-15 10:30:00",
+      "courier_name": "SkyDrop",
+      "first_name": "Jane",
+      "last_name": "Smith"
+    }
+  ],
+  "meta": {
+    "current_page": 1,
+    "per_page": 50,
+    "total_records": 120,
+    "total_pages": 3,
+    "stats": {
+      "total": 120,
+      "pending": 45,
+      "received": 70,
+      "flagged": 5
+    }
+  }
+}
+```
+
+### Response Fields
+
+<ResponseField name="data" type="array">
+  Array of prealert record objects.
+
+  <Expandable title="Prealert record fields">
+    <ResponseField name="prealert_id" type="string">
+      UUID of the prealert record.
+    </ResponseField>
+    <ResponseField name="courier_id" type="string">
+      UUID of the courier account that owns this prealert.
+    </ResponseField>
+    <ResponseField name="user_code" type="string">
+      Customer identifier associated with the shipment.
+    </ResponseField>
+    <ResponseField name="tracking_number" type="string">
+      Carrier tracking number.
+    </ResponseField>
+    <ResponseField name="vendor" type="string">
+      Shipper or store name.
+    </ResponseField>
+    <ResponseField name="description" type="string">
+      Package contents description.
+    </ResponseField>
+    <ResponseField name="status" type="string">
+      Current status of the prealert. One of `pending`, `received`, or `flagged`.
+    </ResponseField>
+    <ResponseField name="created_at" type="string">
+      ISO 8601 datetime string indicating when the prealert was submitted.
+    </ResponseField>
+    <ResponseField name="courier_name" type="string">
+      Display name of the courier account.
+    </ResponseField>
+    <ResponseField name="first_name" type="string">
+      First name of the matched customer.
+    </ResponseField>
+    <ResponseField name="last_name" type="string">
+      Last name of the matched customer.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="meta" type="object">
+  Pagination and aggregate statistics for the current query.
+
+  <Expandable title="meta fields">
+    <ResponseField name="current_page" type="integer">
+      The page number returned.
+    </ResponseField>
+    <ResponseField name="per_page" type="integer">
+      Number of records per page as requested.
+    </ResponseField>
+    <ResponseField name="total_records" type="integer">
+      Total number of records matching the current filters.
+    </ResponseField>
+    <ResponseField name="total_pages" type="integer">
+      Total number of pages available given the current `limit`.
+    </ResponseField>
+    <ResponseField name="stats" type="object">
+      Aggregate counts across **all matching records** (not just the current page).
+
+      <Expandable title="stats fields">
+        <ResponseField name="total" type="integer">
+          Total prealerts matching the active filters.
+        </ResponseField>
+        <ResponseField name="pending" type="integer">
+          Count of prealerts with status `pending`.
+        </ResponseField>
+        <ResponseField name="received" type="integer">
+          Count of prealerts with status `received`.
+        </ResponseField>
+        <ResponseField name="flagged" type="integer">
+          Count of prealerts with status `flagged`.
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+---
+
+## POST — Create Prealert {#post-create-prealert}
+
+Create a prealert record from within the Shiipp dashboard or an internal system. This route is intended for warehouse staff and admins. For courier-originated submissions, use [POST /api/Prealert.php](/api-reference/prealerts/submit) with an API key instead.
+
+### Request Body
+
+<ParamField body="tracking_number" type="string" required>
+  Carrier tracking number for the inbound shipment.
+</ParamField>
+
+<ParamField body="user_code" type="string" required>
+  Customer identifier. Must match an active customer in the system.
+</ParamField>
+
+<ParamField body="vendor" type="string" required>
+  Shipper or store name.
+</ParamField>
+
+<ParamField body="description" type="string">
+  Optional description of the package contents.
+</ParamField>
+
+<ParamField body="courier_id" type="string">
+  UUID of the courier to associate the prealert with. **Required for `admin` and `manager` roles.** Automatically set from the token's courier context for `courier`-role users and does not need to be provided.
+</ParamField>
+
+### Example Request
+
+```bash cURL
+curl -X POST https://your-domain.com/api/ManagePrealerts.php \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tracking_number": "1Z9999999999999999",
+    "user_code": "CUST001",
+    "vendor": "Amazon",
+    "description": "Clothing",
+    "courier_id": "courier-uuid"
+  }'
+```
+
+A successful creation returns HTTP `201` with the standard envelope and a `prealert_id` in the `data` object.
+
+---
+
+## PUT — Update Prealert
+
+Update one or more fields on an existing prealert record. The `prealert_id` of the record to modify must be included in the request body. Courier-role users can only update records that belong to their own courier account.
+
+### Request Body
+
+<ParamField body="prealert_id" type="string" required>
+  UUID of the prealert record to update.
+</ParamField>
+
+<ParamField body="tracking_number" type="string">
+  New carrier tracking number to assign to this prealert.
+</ParamField>
+
+<ParamField body="user_code" type="string">
+  Updated customer identifier. Must match an active customer in the system.
+</ParamField>
+
+<ParamField body="vendor" type="string">
+  Updated shipper or store name.
+</ParamField>
+
+<ParamField body="description" type="string">
+  Updated description of the package contents.
+</ParamField>
+
+### Example Request
+
+```bash cURL
+curl -X PUT https://your-domain.com/api/ManagePrealerts.php \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prealert_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "vendor": "Nike",
+    "description": "Footwear - Running Shoes"
+  }'
+```
+
+<Note>
+  Only the fields you include in the request body are updated. Fields you omit remain unchanged.
+</Note>
+
+---
+
+## DELETE — Delete Prealert
+
+Permanently remove a prealert record. Courier-role users can only delete records that belong to their own courier account. Attempting to delete a record that does not exist, or that belongs to a different courier, returns `404`.
+
+### Request Body
+
+<ParamField body="prealert_id" type="string" required>
+  UUID of the prealert record to delete.
+</ParamField>
+
+### Example Request
+
+```bash cURL
+curl -X DELETE https://your-domain.com/api/ManagePrealerts.php \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+  -H "Content-Type: application/json" \
+  -d '{"prealert_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"}'
+```
+
+### Success Response
+
+```json
+{
+  "status": "success",
+  "message": "Prealert deleted successfully"
+}
+```
+
+<Warning>
+  Deletion is permanent and cannot be undone. Confirm the `prealert_id` before issuing a `DELETE` request, especially in production environments.
+</Warning>
+
+---
+
+## Error Reference
+
+| HTTP Code | Cause |
+|---|---|
+| `400` | Missing required fields in the request body, or invalid JSON |
+| `401` | JWT token is missing, malformed, or expired |
+| `403` | Token is valid but the user lacks permission for the requested operation |
+| `404` | No prealert found for the given `prealert_id`, or the record belongs to a different courier |
+| `405` | An unsupported HTTP method was used |
+| `409` | A `POST` or `PUT` would create a duplicate tracking number under the same courier account |
+| `500` | Unexpected server error — log the response and contact your administrator |

@@ -1,0 +1,134 @@
+---
+title: "Manage Your Courier API Key in Shiipp"
+sidebarTitle: "API Keys"
+description: "Your Shiipp API key authenticates prealert submissions. Learn where to find it, how to rotate it, and best practices for keeping it secure."
+---
+
+Shiipp authenticates all requests to the Prealert API using an API key that is unique to your courier account. You pass this key with every request, and Shiipp uses it to identify your courier, validate your access, and associate submitted prealerts with the correct account.
+
+## Finding Your API Key
+
+Your API key is generated automatically when your courier account is created. Retrieve it at any time from the dashboard.
+
+<Steps>
+  <Step title="Log in to the Shiipp dashboard">
+    Sign in with your courier account credentials at your Shiipp instance URL.
+  </Step>
+  <Step title="Navigate to Courier Settings">
+    Open the navigation menu and select **Courier Settings**.
+  </Step>
+  <Step title="Copy your key">
+    Your API key is displayed in the **API Configuration** section. Click the copy icon to copy it to your clipboard.
+  </Step>
+</Steps>
+
+## Using Your API Key
+
+Pass your API key with every request to the Prealert API. The recommended method is the `X-API-KEY` request header. A query parameter fallback is available but not recommended outside of testing.
+
+<Tabs>
+  <Tab title="Header (Recommended)">
+    Pass your key in the `X-API-KEY` header on every request. This is the preferred method for all production integrations.
+
+    ```http
+    POST /api/Prealert.php HTTP/1.1
+    Host: your-shiipp-domain.com
+    X-API-KEY: your_api_key_here
+    Content-Type: application/json
+    ```
+  </Tab>
+  <Tab title="Query Parameter (Fallback)">
+    You can pass your key as a query parameter for quick testing. Avoid this approach in production — query parameters can appear in server logs and browser history.
+
+    ```
+    POST /api/Prealert.php?api_key=your_api_key_here
+    ```
+  </Tab>
+</Tabs>
+
+### Code Examples
+
+<CodeGroup>
+  ```bash curl
+  curl -X POST https://your-shiipp-domain.com/api/Prealert.php \
+    -H "X-API-KEY: your_api_key_here" \
+    -H "Content-Type: application/json" \
+    -d '{"UserCode":"CUST001","TrackingNumber":"1Z9999999999999999"}'
+  ```
+
+  ```javascript JavaScript
+  const response = await fetch('https://your-shiipp-domain.com/api/Prealert.php', {
+    method: 'POST',
+    headers: {
+      'X-API-KEY': process.env.SHIIPP_API_KEY,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      UserCode: 'CUST001',
+      TrackingNumber: '1Z9999999999999999',
+    }),
+  });
+
+  const data = await response.json();
+  console.log(data);
+  ```
+
+  ```php PHP
+  <?php
+  $client = new \GuzzleHttp\Client();
+
+  $response = $client->post('https://your-shiipp-domain.com/api/Prealert.php', [
+      'headers' => [
+          'X-API-KEY'    => getenv('SHIIPP_API_KEY'),
+          'Content-Type' => 'application/json',
+      ],
+      'json' => [
+          'UserCode'       => 'CUST001',
+          'TrackingNumber' => '1Z9999999999999999',
+      ],
+  ]);
+
+  $data = json_decode($response->getBody(), true);
+  print_r($data);
+  ```
+</CodeGroup>
+
+## Rotating Your API Key
+
+If you suspect your key has been compromised, or as part of routine key hygiene, you can regenerate it from the dashboard.
+
+<Warning>
+  Regenerating your API key immediately invalidates the current key. Any integration still using the old key will receive `403 Forbidden` responses. Update all your systems before rotating in a production environment.
+</Warning>
+
+<Steps>
+  <Step title="Open Courier Settings">
+    Navigate to **Courier Settings** in the Shiipp dashboard.
+  </Step>
+  <Step title="Regenerate the key">
+    Click **Regenerate API Key** in the API Configuration section. Shiipp generates a new key and invalidates the old one immediately.
+  </Step>
+  <Step title="Update your integrations">
+    Replace the old key value in every system that calls the Prealert API — environment variables, secret managers, CI/CD pipelines, and any other configuration files.
+  </Step>
+</Steps>
+
+## Security Best Practices
+
+Treat your API key like a password. Follow these practices to minimize the risk of unauthorized access.
+
+<Accordion title="Store keys in environment variables or secret managers">
+  Never hardcode your API key directly in your source code. Instead, read it at runtime from an environment variable (`process.env.SHIIPP_API_KEY`, `getenv('SHIIPP_API_KEY')`) or a dedicated secrets manager such as AWS Secrets Manager, HashiCorp Vault, or your hosting provider's secret store.
+</Accordion>
+
+<Accordion title="Never commit keys to version control">
+  Add `.env` files and any files that might contain secrets to your `.gitignore`. Scan your repository history for accidentally committed secrets before they are pushed to a remote. Tools like `git-secrets` or `truffleHog` can help automate this check.
+</Accordion>
+
+<Accordion title="Rotate keys periodically">
+  Establish a rotation schedule — for example, every 90 days — and rotate immediately if you suspect exposure. Because rotation is instant in Shiipp, the main overhead is updating your downstream systems, so keeping your integration points consolidated makes rotation faster.
+</Accordion>
+
+<Tip>
+  If multiple services in your infrastructure call the Prealert API, consider isolating the key in a single internal service that proxies requests. This limits the blast radius if the key is ever exposed — you only have one place to update.
+</Tip>

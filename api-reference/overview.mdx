@@ -1,0 +1,128 @@
+---
+title: "Shiipp REST API — Reference Overview"
+sidebarTitle: "Overview"
+description: "The Shiipp API is a RESTful HTTP API. All endpoints accept JSON bodies and return JSON. Learn base URLs, auth methods, and response formats."
+---
+
+The Shiipp REST API gives developers programmatic access to every core capability of the platform — from submitting advance shipment notifications to managing customers, packages, billing, and courier configuration. All communication happens over HTTPS, all request and response bodies use `application/json`, and every response follows a consistent envelope structure that makes error handling predictable across your integration.
+
+## Base URL
+
+Your Shiipp instance runs on a dedicated subdomain or custom domain provisioned by your administrator. There is no shared public base URL.
+
+```
+https://your-domain.com
+```
+
+Replace `your-domain.com` with the hostname provided by your Shiipp administrator. All endpoint paths in this reference are relative to that base URL.
+
+<Note>
+  Always use HTTPS. Plain HTTP requests will be rejected or redirected depending on your server configuration.
+</Note>
+
+## Authentication Methods
+
+Shiipp supports two authentication schemes depending on the endpoint you are calling.
+
+| Method | Header | Applies To |
+|---|---|---|
+| API Key | `X-API-KEY: your_api_key` | `POST /api/Prealert.php` only |
+| JWT Bearer | `Authorization: Bearer <token>` | All other authenticated endpoints |
+
+Obtain a JWT token by calling `POST /api/login.php` with your credentials. Tokens are valid for **8 hours**. API keys are issued per-courier and are managed in the Courier Settings section of the dashboard. See the [Authentication](/api-reference/authentication) page for the full login flow, 2FA support, and error codes.
+
+## Request Format
+
+Every request that includes a body must set the `Content-Type` header to `application/json` and send a valid JSON payload.
+
+```http
+POST /api/ManagePrealerts.php HTTP/1.1
+Host: your-domain.com
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+{
+  "tracking_number": "1Z9999999999999999",
+  "user_code": "CUST001",
+  "vendor": "Amazon"
+}
+```
+
+## Standard Response Envelope
+
+Every API response — success or error — is wrapped in the same top-level JSON envelope. This makes it straightforward to write a single response-handling layer in your client code.
+
+```json
+{
+  "status": "success",
+  "message": "Human-readable message",
+  "data": { },
+  "timestamp": 1705123456
+}
+```
+
+The `status` field will be one of `"success"`, `"fail"`, or `"error"`. The `message` field is always a human-readable string suitable for logging. The `data` field contains the actual payload — its shape varies by endpoint and is documented on each endpoint's page.
+
+### Paginated Responses
+
+Endpoints that return lists support pagination. In addition to the standard envelope fields, paginated responses include a `meta` object at the top level.
+
+```json
+{
+  "status": "success",
+  "message": "Records fetched successfully",
+  "data": [ ],
+  "meta": {
+    "total_count": 1250,
+    "page": 1,
+    "limit": 25,
+    "total_pages": 50
+  },
+  "timestamp": 1705123456
+}
+```
+
+Use the `page` and `limit` query parameters to navigate through result sets. The maximum `limit` value varies by endpoint and is noted in each endpoint's documentation.
+
+## HTTP Status Codes
+
+Shiipp uses standard HTTP status codes. Your client should always check the HTTP status code before parsing the response body.
+
+| Code | Meaning |
+|---|---|
+| `200` | Success — request was processed and a response body is present |
+| `201` | Created — a new resource was successfully created |
+| `400` | Bad request — validation failed or the request body is malformed |
+| `401` | Authentication required — token or API key is missing or expired |
+| `403` | Permission denied — credentials are valid but lack the required access |
+| `404` | Resource not found — the requested record does not exist |
+| `405` | Method not allowed — the HTTP verb is not supported on this endpoint |
+| `409` | Conflict — a duplicate resource already exists |
+| `500` | Server error — an unexpected internal error occurred |
+
+<Warning>
+  On `500` errors, do not retry immediately. Log the full response body and timestamp, then contact your Shiipp administrator with that information.
+</Warning>
+
+## API Sections
+
+<CardGroup cols={2}>
+  <Card title="Prealerts" icon="bell" href="/api-reference/prealerts/submit">
+    Submit advance shipment notifications before packages arrive at the warehouse. Supports API key auth for courier integrations.
+  </Card>
+  <Card title="Packages" icon="box" href="/api-reference/packages">
+    Track inbound and outbound packages, update statuses, and attach scanned weight and dimension data.
+  </Card>
+  <Card title="Customers" icon="users" href="/api-reference/customers">
+    Create and manage customer accounts, user codes, mailbox assignments, and contact details.
+  </Card>
+  <Card title="Manifests" icon="file-lines" href="/api-reference/manifests">
+    Generate and retrieve outbound manifests for courier pickup, including package line items and totals.
+  </Card>
+  <Card title="Billing" icon="credit-card" href="/api-reference/billing">
+    Access invoices, apply charges, and query billing summaries for individual customers or billing periods.
+  </Card>
+  <Card title="Courier Settings" icon="gear" href="/api-reference/courier-settings">
+    Configure courier profiles, rate cards, API keys, and integration preferences.
+  </Card>
+</CardGroup>

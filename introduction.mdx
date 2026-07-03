@@ -1,0 +1,77 @@
+---
+title: "Shiipp: Warehouse & Logistics Management Platform"
+sidebarTitle: "Introduction"
+description: "Shiipp is a multi-tenant SaaS platform for freight forwarders and courier companies to manage packages, track shipments, build flight manifests, and automate billing."
+---
+
+Shiipp is a full-featured warehouse and logistics management platform built for freight forwarders, courier companies, and logistics operators. It handles everything from package intake and prealert management to flight manifest creation and automated billing — all in one place.
+
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Set up your account and make your first API call in minutes
+  </Card>
+  <Card title="Authentication" icon="key" href="/authentication">
+    Learn how to authenticate with API keys and JWT tokens
+  </Card>
+  <Card title="Courier Integration" icon="truck" href="/courier/overview">
+    Connect your system to Shiipp as a courier partner
+  </Card>
+  <Card title="API Reference" icon="code" href="/api-reference/overview">
+    Explore the full REST API surface
+  </Card>
+</CardGroup>
+
+## What Shiipp Does
+
+Shiipp centralizes the operational workflow for logistics businesses that receive, process, and ship packages on behalf of their customers. Warehouse staff scan incoming packages, assign them to customer accounts, group them into flight manifests, and generate invoices — all from a single dashboard.
+
+For **courier partners**, Shiipp provides a public API to submit prealerts, sync your customer list automatically, and receive real-time status webhooks when shipments are dispatched.
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="Package Tracking" icon="box">
+    Scan and log packages as they arrive. Attach tracking numbers, weights, and carrier details with instant prealert pre-fill.
+  </Card>
+  <Card title="Prealerts" icon="bell">
+    Courier partners submit prealerts via API before packages arrive. Warehouse staff see them instantly at scan time.
+  </Card>
+  <Card title="Flight Manifests" icon="plane">
+    Group packages into flight containers with AWB numbers. Track status from draft through departure with a full audit trail.
+  </Card>
+  <Card title="Automated Billing" icon="file-invoice-dollar">
+    Tiered weight-based billing with configurable rates. Generate, publish, and export professional invoices for each courier.
+  </Card>
+  <Card title="Customer Sync" icon="rotate">
+    Shiipp automatically pulls your customer list from your system every 8 hours, keeping names and user codes in sync.
+  </Card>
+  <Card title="Webhooks" icon="webhook">
+    Receive instant HTTP notifications when packages are logged or manifest statuses change, formatted to your exact payload spec.
+  </Card>
+</CardGroup>
+
+## Who Uses Shiipp
+
+| Role | What They Do |
+|------|-------------|
+| **Warehouse Staff** | Scan incoming packages, log weights, resolve prealerts |
+| **Managers** | Build manifests, manage couriers, review billing |
+| **Courier Partners** | Submit prealerts via API, sync customers, view their packages and invoices |
+| **Administrators** | Configure rates, manage users, oversee all operations |
+
+## Next Steps
+
+<Steps>
+  <Step title="Create Your Account">
+    Contact your Shiipp administrator to provision your account and assign your role.
+  </Step>
+  <Step title="Get Your Credentials">
+    Obtain your API key (for courier partners) or log in to receive a JWT access token.
+  </Step>
+  <Step title="Submit Your First Prealert">
+    Follow the [Courier Integration guide](/courier/overview) to connect your system and submit your first prealert.
+  </Step>
+  <Step title="Explore the API">
+    Browse the [API Reference](/api-reference/overview) for a complete list of endpoints with request/response examples.
+  </Step>
+</Steps>

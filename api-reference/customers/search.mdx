@@ -1,0 +1,202 @@
+---
+title: "Search Customers with Fuzzy and Exact Matching"
+sidebarTitle: "Search Customers"
+description: "GET /api/SearchCustomers.php — search customers by name, email, or user code. Supports basic LIKE search and advanced fuzzy matching with scoring."
+---
+
+The **SearchCustomers** endpoint provides fast, flexible customer lookup by name, email, or user code. It supports two modes: a standard LIKE-based search for most use cases, and an advanced fuzzy matching mode that uses phonetic and distance algorithms to surface relevant results even when spellings are uncertain or inconsistent.
+
+## Endpoint
+
+```
+GET /api/SearchCustomers.php
+```
+
+**Authentication:** JWT Bearer token required.
+
+```
+Authorization: Bearer <your_token>
+```
+
+---
+
+## Query Parameters
+
+<ParamField query="q" type="string" required>
+  The search term to match against. Must be at least **2 characters** long. Shorter values are rejected to prevent overly broad queries.
+</ParamField>
+
+<ParamField query="limit" type="integer" default="15">
+  Maximum number of results to return. Cannot exceed `50`.
+</ParamField>
+
+<ParamField query="courier_id" type="integer">
+  Restrict results to customers belonging to a specific courier. When omitted, results are scoped to the authenticated user's accessible couriers.
+</ParamField>
+
+<ParamField query="advanced" type="boolean" default="false">
+  Set to `true` to enable fuzzy matching mode. See [Advanced Search](#advanced-search) below for details.
+</ParamField>
+
+---
+
+## Basic Search (Default)
+
+When `advanced` is omitted or set to `false`, the endpoint performs a standard SQL `LIKE` search across the following fields:
+
+- `first_name`
+- `last_name`
+- Full name (first + last combined)
+- `email`
+- `user_code`
+
+Results are sorted alphabetically by `last_name`, then `first_name`.
+
+### Example Request
+
+```
+GET /api/SearchCustomers.php?q=jane+smith&limit=10
+```
+
+```bash
+curl "https://app.shiipp.com/api/SearchCustomers.php?q=jane+smith&limit=10" \
+  -H "Authorization: Bearer <your_token>"
+```
+
+### Example Response
+
+```json
+{
+  "status": "success",
+  "count": 3,
+  "data": [
+    {
+      "courier_customer_id": "cust-uuid",
+      "user_code": "CUST001",
+      "first_name": "Jane",
+      "last_name": "Smith",
+      "email": null,
+      "courier_id": "courier-uuid",
+      "courier_name": "SkyDrop",
+      "match_score": null
+    }
+  ]
+}
+```
+
+---
+
+## Advanced Search
+
+Enabling `advanced=true` activates a multi-signal relevance engine that ranks results by how closely they match the query. This is the recommended mode when user input may contain typos, phonetic variations, or transposed name parts.
+
+The advanced mode applies three scoring signals in combination:
+
+| Signal | Description |
+|---|---|
+| **Levenshtein Distance** | Measures the character-level edit distance between the query and each candidate field. Closer matches score higher. |
+| **Soundex Phonetic Matching** | Groups names that sound alike (e.g., "Smith" and "Smyth") so phonetic variants are surfaced even without exact spelling. |
+| **Token-Based Scoring** | Splits the query into individual tokens and scores partial word matches across all searchable fields. |
+
+Results are ranked by a combined `match_score` and returned in descending score order.
+
+### Example Request
+
+```
+GET /api/SearchCustomers.php?q=jayne+smyth&advanced=true&limit=10
+```
+
+```bash
+curl "https://app.shiipp.com/api/SearchCustomers.php?q=jayne+smyth&advanced=true&limit=10" \
+  -H "Authorization: Bearer <your_token>"
+```
+
+### Example Response
+
+```json
+{
+  "status": "success",
+  "count": 3,
+  "data": [
+    {
+      "courier_customer_id": "cust-uuid",
+      "user_code": "CUST001",
+      "first_name": "Jane",
+      "last_name": "Smith",
+      "email": null,
+      "courier_id": "courier-uuid",
+      "courier_name": "SkyDrop",
+      "match_score": 2150.0
+    }
+  ]
+}
+```
+
+---
+
+## Response Fields
+
+<ResponseField name="status" type="string">
+  `"success"` when the search completed without error.
+</ResponseField>
+
+<ResponseField name="count" type="integer">
+  Number of results returned in this response (not the total across all pages — this endpoint does not paginate).
+</ResponseField>
+
+<ResponseField name="data" type="array">
+  Array of matching customer objects, ordered by relevance.
+
+  <Expandable title="Customer match object fields">
+    <ResponseField name="courier_customer_id" type="string">
+      Unique UUID for the customer record.
+    </ResponseField>
+    <ResponseField name="user_code" type="string">
+      The customer's unique user code.
+    </ResponseField>
+    <ResponseField name="first_name" type="string">
+      Customer's first name.
+    </ResponseField>
+    <ResponseField name="last_name" type="string">
+      Customer's last name.
+    </ResponseField>
+    <ResponseField name="email" type="string | null">
+      Customer's email address, or `null` if not on file.
+    </ResponseField>
+    <ResponseField name="courier_id" type="string">
+      UUID of the courier organization this customer belongs to.
+    </ResponseField>
+    <ResponseField name="courier_name" type="string">
+      Name of the courier organization.
+    </ResponseField>
+    <ResponseField name="match_score" type="number | null">
+      Relevance score used for ranking. Populated only in advanced mode (`advanced=true`). Higher scores indicate a stronger match. Returns `null` in basic mode.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+---
+
+## Choosing the Right Mode
+
+<Tabs>
+  <Tab title="Use Basic Search When...">
+    - You have a known, correctly spelled name or user code
+    - You're building a fast autocomplete or type-ahead UI component
+    - You want the lightest possible response time
+  </Tab>
+  <Tab title="Use Advanced Search When...">
+    - Input is provided by end users who may misspell names
+    - You're searching across a large customer list with many similar names
+    - You need phonetic variants to surface (e.g., "Bryan" vs "Brian")
+    - You want results ranked by relevance rather than alphabetically
+  </Tab>
+</Tabs>
+
+<Tip>
+  For customer lookup fields in your application UI, start with basic search as the default and provide an optional "fuzzy search" toggle that appends `&advanced=true` when the user finds no results. This balances performance with coverage.
+</Tip>
+
+<Note>
+  The `match_score` value is a composite internal score and is not normalized to a fixed range. Use it for **relative ranking** within a single response — do not compare scores across separate requests.
+</Note>

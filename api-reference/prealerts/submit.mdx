@@ -1,0 +1,183 @@
+---
+title: "POST /api/Prealert.php — Submit a Prealert"
+sidebarTitle: "Submit Prealert"
+description: "Submit an advance shipment notification to Shiipp before a package arrives. Authenticated with X-API-KEY. Returns a prealert_id on success."
+---
+
+A prealert is an advance shipment notification that tells the Shiipp warehouse a package is on its way before it physically arrives. Submitting prealerts enables the receiving team to pre-match incoming packages to customers automatically, reducing processing time and manual lookups. This endpoint is the public courier-facing entry point — it authenticates with an API key rather than a JWT token, making it suitable for automated shipping pipelines and third-party courier software.
+
+## Endpoint
+
+```
+POST /api/Prealert.php
+```
+
+**Authentication:** `X-API-KEY` header (your courier API key). See [Authentication](/api-reference/authentication#api-key-authentication) for how to obtain your key.
+
+<Note>
+  This endpoint does **not** accept JWT Bearer tokens. Use your courier API key exclusively. For warehouse-internal prealert creation by authenticated staff, see [Manage Prealerts — POST](/api-reference/prealerts/manage#post-create-prealert).
+</Note>
+
+---
+
+## Request Headers
+
+<ParamField header="X-API-KEY" type="string" required>
+  Your courier API key, available from Courier Settings in the Shiipp dashboard.
+</ParamField>
+
+<ParamField header="Content-Type" type="string" required>
+  Must be `application/json`.
+</ParamField>
+
+---
+
+## Request Body
+
+<ParamField body="UserCode" type="string" required>
+  The customer identifier in your Shiipp account. Maximum 100 characters. Must exactly match a `user_code` value in your active customer list — an unrecognised code will return a `400` error.
+</ParamField>
+
+<ParamField body="TrackingNumber" type="string" required>
+  The carrier-assigned tracking number for the inbound shipment. Maximum 255 characters. A `409` conflict is returned if a prealert with this tracking number already exists under your courier account.
+</ParamField>
+
+<ParamField body="Vendor" type="string">
+  The name of the shipper, retailer, or origin store (e.g. `"Amazon"`, `"Nike"`). Used for display and filtering in the warehouse dashboard.
+</ParamField>
+
+<ParamField body="Description" type="string">
+  A brief description of the package contents (e.g. `"Electronics - Laptop"`). This helps warehouse staff handle packages appropriately on arrival.
+</ParamField>
+
+<ParamField body="Reference" type="string">
+  Your internal order or reference number. Stored alongside the prealert record and returned in list responses for cross-referencing with your own systems.
+</ParamField>
+
+---
+
+## Example Request
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://your-domain.com/api/Prealert.php \
+  -H "X-API-KEY: your_api_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "UserCode": "CUST001",
+    "TrackingNumber": "1Z9999999999999999",
+    "Vendor": "Amazon",
+    "Description": "Electronics - Laptop",
+    "Reference": "ORD-2024-001"
+  }'
+```
+
+```javascript JavaScript (fetch)
+const response = await fetch("https://your-domain.com/api/Prealert.php", {
+  method: "POST",
+  headers: {
+    "X-API-KEY": "your_api_key",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    UserCode: "CUST001",
+    TrackingNumber: "1Z9999999999999999",
+    Vendor: "Amazon",
+    Description: "Electronics - Laptop",
+    Reference: "ORD-2024-001",
+  }),
+});
+
+const result = await response.json();
+
+if (response.status === 201 && result.status === "success") {
+  console.log("Prealert created:", result.data.prealert_id);
+} else {
+  console.error("Submission failed:", result.message);
+}
+```
+
+```php PHP
+$payload = json_encode([
+    'UserCode'       => 'CUST001',
+    'TrackingNumber' => '1Z9999999999999999',
+    'Vendor'         => 'Amazon',
+    'Description'    => 'Electronics - Laptop',
+    'Reference'      => 'ORD-2024-001',
+]);
+
+$ch = curl_init('https://your-domain.com/api/Prealert.php');
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_POST           => true,
+    CURLOPT_POSTFIELDS     => $payload,
+    CURLOPT_HTTPHEADER     => [
+        'X-API-KEY: your_api_key',
+        'Content-Type: application/json',
+    ],
+]);
+
+$response = json_decode(curl_exec($ch), true);
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+curl_close($ch);
+
+if ($httpCode === 201 && $response['status'] === 'success') {
+    echo 'Prealert ID: ' . $response['data']['prealert_id'];
+} else {
+    echo 'Error: ' . $response['message'];
+}
+```
+
+</CodeGroup>
+
+---
+
+## Success Response
+
+A successful submission returns HTTP `201 Created`.
+
+```json
+{
+  "status": "success",
+  "message": "Pre-alert logged successfully",
+  "data": {
+    "prealert_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+  }
+}
+```
+
+<ResponseField name="status" type="string">
+  Always `"success"` for a `201` response.
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Human-readable confirmation message.
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  Container object for the created resource.
+
+  <Expandable title="data fields">
+    <ResponseField name="prealert_id" type="string">
+      UUID of the newly created prealert record. Store this value if you need to reference, update, or delete the prealert later via the [Manage Prealerts](/api-reference/prealerts/manage) endpoint.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+---
+
+## Error Reference
+
+| HTTP Code | Cause |
+|---|---|
+| `400` | A required field (`UserCode` or `TrackingNumber`) is missing, the request body is not valid JSON, or `UserCode` does not match any customer in your account |
+| `401` | The `X-API-KEY` header was not provided |
+| `403` | The API key is invalid, has been deactivated, or belongs to a different courier |
+| `405` | The request used an HTTP method other than `POST` |
+| `409` | A prealert for this `TrackingNumber` already exists under your courier account |
+| `500` | An unexpected server error occurred — log the response body and contact your Shiipp administrator |
+
+<Warning>
+  On a `409` conflict, do not re-submit the same tracking number. Retrieve the existing prealert using the [GET /api/ManagePrealerts.php](/api-reference/prealerts/manage) endpoint if you need to inspect or update it.
+</Warning>

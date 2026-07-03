@@ -1,0 +1,172 @@
+---
+title: "List Customers with Pagination and Search"
+sidebarTitle: "List Customers"
+description: "POST /api/Customers.php — retrieve a paginated list of customers with optional search filtering. JWT Bearer token required."
+---
+
+The **Customers** endpoint returns a paginated list of customer records associated with your Shiipp courier account. An optional `search` parameter lets you filter results by user code, full name, or email without needing to build complex query strings.
+
+## Endpoint
+
+```
+POST /api/Customers.php
+```
+
+**Authentication:** JWT Bearer token with `customer:read` permission required.
+
+```
+Authorization: Bearer <your_token>
+```
+
+---
+
+## Request Body
+
+<ParamField body="page" type="integer" default="1">
+  The page number to retrieve. Pagination starts at `1`.
+</ParamField>
+
+<ParamField body="limit" type="integer" default="50">
+  Number of customer records to return per page. Maximum allowed value is `500`.
+</ParamField>
+
+<ParamField body="search" type="string">
+  Optional search term. When provided, results are filtered to customers whose `user_code`, `full_name`, or `email` contain the search string (case-insensitive partial match).
+</ParamField>
+
+---
+
+## Example Request
+
+<CodeGroup>
+
+```json JSON Body
+{
+  "page": 1,
+  "limit": 50,
+  "search": "Jane"
+}
+```
+
+```bash cURL
+curl -X POST https://app.shiipp.com/api/Customers.php \
+  -H "Authorization: Bearer <your_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "page": 1,
+    "limit": 50,
+    "search": "Jane"
+  }'
+```
+
+</CodeGroup>
+
+---
+
+## Response
+
+```json
+{
+  "status": "success",
+  "message": "Customers retrieved successfully.",
+  "data": [
+    {
+      "courier_customer_id": "cust-uuid",
+      "user_code": "CUST001",
+      "first_name": "Jane",
+      "last_name": "Smith",
+      "branch": "Kingston",
+      "courier_name": "SkyDrop",
+      "courier_code": "SKY",
+      "created_at": "2024-01-01 08:00:00"
+    }
+  ],
+  "meta": {
+    "total_count": 312,
+    "page": 1,
+    "limit": 50,
+    "total_pages": 7
+  }
+}
+```
+
+### Response Fields
+
+<ResponseField name="status" type="string">
+  `"success"` when the request was processed without error.
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  A human-readable confirmation message.
+</ResponseField>
+
+<ResponseField name="data" type="array">
+  Array of customer objects matching the search criteria.
+
+  <Expandable title="Customer object fields">
+    <ResponseField name="courier_customer_id" type="string">
+      Unique UUID identifying this customer record.
+    </ResponseField>
+    <ResponseField name="user_code" type="string">
+      The customer's unique user code within the courier account.
+    </ResponseField>
+    <ResponseField name="first_name" type="string">
+      Customer's first name.
+    </ResponseField>
+    <ResponseField name="last_name" type="string">
+      Customer's last name.
+    </ResponseField>
+    <ResponseField name="branch" type="string">
+      The branch or pickup location associated with this customer, if set.
+    </ResponseField>
+    <ResponseField name="courier_name" type="string">
+      The name of the courier organization this customer belongs to.
+    </ResponseField>
+    <ResponseField name="courier_code" type="string">
+      Short alphanumeric code identifying the courier organization.
+    </ResponseField>
+    <ResponseField name="created_at" type="string">
+      Timestamp when the customer record was created. Format: `YYYY-MM-DD HH:MM:SS`.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="meta" type="object">
+  Pagination metadata for the response.
+
+  <Expandable title="Meta object fields">
+    <ResponseField name="total_count" type="integer">
+      Total number of customers matching the search term across all pages.
+    </ResponseField>
+    <ResponseField name="page" type="integer">
+      The current page number returned.
+    </ResponseField>
+    <ResponseField name="limit" type="integer">
+      The number of records per page used for this response.
+    </ResponseField>
+    <ResponseField name="total_pages" type="integer">
+      Total number of pages available given the current `limit`.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+---
+
+## Pagination
+
+To iterate through all customers, increment `page` until `page` equals `meta.total_pages`.
+
+```json
+{
+  "page": 2,
+  "limit": 50
+}
+```
+
+<Tip>
+  If you need to retrieve all customers at once for a bulk operation, increase `limit` toward the maximum of `500`. For very large customer lists, prefer paginating in smaller chunks to avoid long response times.
+</Tip>
+
+<Note>
+  The `search` filter matches across `user_code`, combined full name, and email simultaneously. You do not need to know which field contains the value — a single term like `"Jane"` will surface matches in any of those fields.
+</Note>

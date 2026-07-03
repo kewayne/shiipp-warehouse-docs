@@ -1,0 +1,167 @@
+---
+title: "Submit Prealerts to Shiipp via API"
+sidebarTitle: "Submitting Prealerts"
+description: "Use the Shiipp Prealert API to notify the warehouse about incoming packages before they arrive, enabling faster processing and automatic customer matching."
+---
+
+The Prealert API lets you submit advance shipment notifications to Shiipp as soon as you have tracking information — even before a package leaves the origin warehouse. When a package is physically scanned at the Shiipp facility, the system checks for a matching prealert and automatically fills in the customer name, shipper, and description, reducing manual entry errors and speeding up receiving.
+
+## Endpoint
+
+```
+POST /api/Prealert.php
+```
+
+Authenticate every request using your API key in the `X-API-KEY` header. See [API Keys](/courier/api-keys) for instructions on finding and securing your key.
+
+## Request Body
+
+Send a JSON object in the request body. `UserCode` and `TrackingNumber` are required; all other fields are optional but recommended to give the warehouse team the most complete picture of an incoming package.
+
+<ParamField body="UserCode" type="string" required>
+  The customer identifier from your customer list. Maximum 100 characters. Must match the normalised (uppercased, trimmed) `UserCode` value on the customer record — see [Customer List Format](/courier/customer-list-format) for details.
+</ParamField>
+
+<ParamField body="TrackingNumber" type="string" required>
+  The carrier tracking number for the package. Maximum 255 characters. Duplicate tracking numbers for the same courier are rejected with a `409` response.
+</ParamField>
+
+<ParamField body="Vendor" type="string">
+  The name of the shipper or online store (e.g. `"Amazon"`, `"Best Buy"`). Displayed on the package record in the warehouse dashboard.
+</ParamField>
+
+<ParamField body="Description" type="string">
+  A brief description of the package contents (e.g. `"Electronics - Laptop"`). Helps warehouse staff handle packages appropriately.
+</ParamField>
+
+<ParamField body="Reference" type="string">
+  Your internal reference number or order ID (e.g. `"ORD-2024-001"`). Stored against the prealert for your own reconciliation purposes.
+</ParamField>
+
+## Example Request
+
+```http
+POST /api/Prealert.php HTTP/1.1
+Host: your-shiipp-domain.com
+X-API-KEY: your_api_key_here
+Content-Type: application/json
+
+{
+  "UserCode": "CUST001",
+  "TrackingNumber": "1Z9999999999999999",
+  "Vendor": "Amazon",
+  "Description": "Electronics - Laptop",
+  "Reference": "ORD-2024-001"
+}
+```
+
+## Success Response
+
+A successful submission returns HTTP `201 Created` with a JSON body containing the new prealert's internal UUID.
+
+```json
+{
+  "status": "success",
+  "message": "Pre-alert logged successfully",
+  "data": {
+    "prealert_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+  }
+}
+```
+
+Store the `prealert_id` in your own system if you want to reference or reconcile the prealert later.
+
+## Error Responses
+
+| HTTP Code | `status` | Cause |
+|---|---|---|
+| `400` | `error` | Missing required field (`UserCode` or `TrackingNumber`) or malformed JSON body |
+| `401` | `error` | No API key was provided in the request |
+| `403` | `error` | The API key is invalid, deactivated, or does not match any courier account |
+| `405` | `error` | Request used a method other than POST |
+| `409` | `error` | A prealert for this tracking number already exists for your courier |
+| `500` | `error` | An unexpected server error occurred — retry after a short delay |
+
+<Note>
+  Duplicate tracking numbers for the same courier are rejected with a `409`. Check whether a prealert already exists before submitting, or implement idempotent retry logic that treats `409` as a non-fatal condition.
+</Note>
+
+## Code Examples
+
+<CodeGroup>
+  ```bash curl
+  curl -X POST https://your-shiipp-domain.com/api/Prealert.php \
+    -H "X-API-KEY: your_api_key_here" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "UserCode": "CUST001",
+      "TrackingNumber": "1Z9999999999999999",
+      "Vendor": "Amazon",
+      "Description": "Electronics - Laptop",
+      "Reference": "ORD-2024-001"
+    }'
+  ```
+
+  ```javascript JavaScript (fetch)
+  const submitPrealert = async (prealert) => {
+    const response = await fetch('https://your-shiipp-domain.com/api/Prealert.php', {
+      method: 'POST',
+      headers: {
+        'X-API-KEY': process.env.SHIIPP_API_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(prealert),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(`Shiipp error ${response.status}: ${error.message}`);
+    }
+
+    return response.json();
+  };
+
+  // Usage
+  const result = await submitPrealert({
+    UserCode: 'CUST001',
+    TrackingNumber: '1Z9999999999999999',
+    Vendor: 'Amazon',
+    Description: 'Electronics - Laptop',
+    Reference: 'ORD-2024-001',
+  });
+
+  console.log('Prealert ID:', result.data.prealert_id);
+  ```
+
+  ```php PHP
+  <?php
+  function submitPrealert(array $data): array {
+      $client = new \GuzzleHttp\Client();
+
+      $response = $client->post('https://your-shiipp-domain.com/api/Prealert.php', [
+          'headers' => [
+              'X-API-KEY'    => getenv('SHIIPP_API_KEY'),
+              'Content-Type' => 'application/json',
+          ],
+          'json' => $data,
+      ]);
+
+      return json_decode($response->getBody(), true);
+  }
+
+  // Usage
+  $result = submitPrealert([
+      'UserCode'       => 'CUST001',
+      'TrackingNumber' => '1Z9999999999999999',
+      'Vendor'         => 'Amazon',
+      'Description'    => 'Electronics - Laptop',
+      'Reference'      => 'ORD-2024-001',
+  ]);
+
+  echo 'Prealert ID: ' . $result['data']['prealert_id'];
+  ```
+</CodeGroup>
+
+<Tip>
+  Submit prealerts as soon as you have the tracking number — even before the package ships. The warehouse sees prealerts immediately, so earlier submissions give staff more preparation time and reduce processing delays on arrival.
+</Tip>

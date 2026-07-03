@@ -1,0 +1,76 @@
+---
+title: "Log Incoming Packages at the Warehouse"
+sidebarTitle: "Scanning Packages"
+description: "Step-by-step guide for warehouse staff to scan, log, and assign incoming packages using Shiipp's intake interface and prealert prefill system."
+---
+
+When a package arrives at your facility, Shiipp's Scan page gives you a fast, structured intake flow. If a courier partner has submitted a prealert ahead of time, most fields fill in automatically — so you spend less time typing and more time moving freight.
+
+<Note>
+  This guide is for **warehouse staff and above**. You must be logged in with an account that has at least the Warehouse Staff role to access the Scan page.
+</Note>
+
+## Scanning a Package
+
+<Steps>
+  <Step title="Navigate to the Scan page">
+    Open the sidebar and click **Scan**. This takes you to `scan.php`, the primary package intake interface. Keep this tab open while you're processing inbound freight.
+  </Step>
+
+  <Step title="Enter the tracking number">
+    Point your barcode scanner at the package label, or type the tracking number manually into the **Tracking Number** field. If a matching prealert exists in the system, Shiipp automatically fills in:
+
+    - Customer name
+    - Shipper / vendor
+    - Package description
+    - Courier assignment
+
+    Review the pre-filled values carefully and adjust anything that doesn't match the physical package in front of you.
+  </Step>
+
+  <Step title="Enter the package weight">
+    Type the weight in the **Weight (LBS)** field. Shiipp calculates and displays the kilogram equivalent in real time — no manual conversion needed.
+  </Step>
+
+  <Step title="Verify customer and package details">
+    Confirm or update the following fields before saving:
+
+    | Field | What to check |
+    |---|---|
+    | **User Code** | Matches the customer's unique identifier |
+    | **First Name / Last Name** | Correct recipient |
+    | **Shipper / Vendor** | Who sent the package |
+    | **Description** | Contents or item type |
+    | **Package Type** | Box, envelope, pallet, etc. |
+  </Step>
+
+  <Step title="Save the package record">
+    Click **Save**. The package appears immediately in the **Packages** list and is available for manifest assignment.
+  </Step>
+</Steps>
+
+## Editing a Package After It's Logged
+
+You don't need to open a modal to fix a mistake. Click any cell in the **Packages** table — weight, tracking number, description, or any other field — and edit it inline. Changes save automatically when you click away.
+
+## Carrier Auto-Detection
+
+Shiipp inspects the tracking number format and attempts to identify the carrier automatically. If the carrier is detected, it populates the courier field for you. Always verify the result, especially for carriers that share similar tracking formats.
+
+## Handling Unknown Packages
+
+If Shiipp can't match the tracking number to a customer (the **User Code** field stays blank), the package is flagged as **unknown**. It is still saved to the system, but it won't be assignable to a manifest until a customer is linked.
+
+<Warning>
+  Unknown packages appear in the **Exception Alerts** panel on the dashboard. Resolve them promptly so packages aren't held up during manifest building.
+</Warning>
+
+Review unknown packages by:
+
+1. Opening the **Dashboard** and locating the Exception Alerts widget.
+2. Clicking the flagged package.
+3. Searching for the correct customer and updating the User Code.
+
+<Tip>
+  Prealerts pre-fill customer info automatically. Encourage your courier partners to submit prealerts before packages ship — it cuts intake time significantly and reduces unknown-package exceptions.
+</Tip>

@@ -1,0 +1,135 @@
+---
+title: "Configure Webhook Payloads with the Payload Builder"
+sidebarTitle: "Webhook Builder"
+description: "Use Shiipp's drag-and-drop Payload Builder to customize the JSON structure of webhooks sent to your system when packages are logged or manifests change status."
+---
+
+Shiipp dispatches outbound webhooks to your configured endpoints whenever key events occur in the warehouse — giving your system real-time visibility into package and manifest activity without polling. The Payload Builder lets you take full control of the JSON structure those webhooks carry, so your receiving endpoint gets exactly the fields it expects without any transformation on your side.
+
+## Webhook Events
+
+Shiipp fires webhooks for two event types:
+
+| Event | Trigger |
+|---|---|
+| `new_package` | A new package is logged for your courier in the warehouse |
+| `status_update` | A manifest associated with your courier changes status |
+
+Configure the destination URL for each event type in Courier Settings — `api_url_add_package` for package events and `api_url_status_update` for manifest status events.
+
+## Using the Payload Builder
+
+<Note>
+  The Payload Builder is only available to users with the **Admin** or **Manager** role. As a courier partner, configure your endpoint URLs in Courier Settings and coordinate with your Shiipp administrator to customise payload shapes if needed.
+</Note>
+
+<Steps>
+  <Step title="Open the Payload Builder">
+    In the Shiipp dashboard, navigate to **System > Webhook Payload Designer**.
+  </Step>
+  <Step title="Select the payload type">
+    Choose either **new_package** or **status_update** from the event type selector. The variable panel on the left updates to show variables available for that event.
+  </Step>
+  <Step title="Add fields">
+    Drag fields from the variable panel onto the builder canvas. For each field, set:
+    - **Key** — the JSON property name your system receives (e.g. `tracking_no`)
+    - **Value** — a Shiipp variable that resolves at dispatch time (e.g. `{{tracking_number}}`)
+  </Step>
+  <Step title="Set the root type">
+    Choose whether your payload root is a JSON **object** `{}` or an **array** `[]` to match your receiving endpoint's expected structure.
+  </Step>
+  <Step title="Preview and save">
+    Click **Preview** to see a sample of the generated JSON with example values substituted in. When you are satisfied with the structure, click **Save**.
+  </Step>
+</Steps>
+
+## Available Variables
+
+<Tabs>
+  <Tab title="new_package">
+    Use these variables when building the payload for the `new_package` event.
+
+    | Variable | Description |
+    |---|---|
+    | `{{package_id}}` | Internal package UUID |
+    | `{{tracking_number}}` | Carrier tracking number |
+    | `{{house_number}}` | Internal warehouse reference number |
+    | `{{weight}}` | Package weight in LBS |
+    | `{{user_code}}` | Customer code |
+    | `{{first_name}}` | Customer first name |
+    | `{{last_name}}` | Customer last name |
+    | `{{shipper}}` | Shipper or vendor name |
+    | `{{description}}` | Package contents description |
+    | `{{entry_date_time}}` | Date and time the package was logged |
+  </Tab>
+  <Tab title="status_update">
+    Use these variables when building the payload for the `status_update` event.
+
+    | Variable | Description |
+    |---|---|
+    | `{{manifest_code}}` | Manifest number |
+    | `{{awb_number}}` | Air Waybill number |
+    | `{{status}}` | The new manifest status |
+    | `{{location}}` | Dispatch location |
+    | `{{timestamp}}` | Timestamp of the status change event |
+    | `{{packages}}` | Array of packages included in the manifest |
+    | `{{flight_date}}` | Scheduled flight date |
+  </Tab>
+</Tabs>
+
+### Example Payload
+
+Here is an example of a `new_package` payload shaped in the Payload Builder and the resolved JSON your endpoint receives when a package is logged:
+
+<CodeGroup>
+  ```json Builder Configuration
+  {
+    "trackingNo": "{{tracking_number}}",
+    "warehouseRef": "{{house_number}}",
+    "customer": {
+      "code": "{{user_code}}",
+      "name": "{{first_name}} {{last_name}}"
+    },
+    "weight": "{{weight}}",
+    "shipper": "{{shipper}}",
+    "loggedAt": "{{entry_date_time}}"
+  }
+  ```
+
+  ```json Resolved Webhook Payload
+  {
+    "trackingNo": "1Z9999999999999999",
+    "warehouseRef": "WH-00412",
+    "customer": {
+      "code": "CUST001",
+      "name": "Jane Smith"
+    },
+    "weight": "2.4",
+    "shipper": "Amazon",
+    "loggedAt": "2024-06-15T14:32:00Z"
+  }
+  ```
+</CodeGroup>
+
+## Webhook Delivery
+
+Shiipp sends all webhooks as `POST` requests with the following headers:
+
+| Header | Value |
+|---|---|
+| `Content-Type` | `application/json` |
+| `Authorization` | `Bearer <your_api_token>` |
+
+Your `api_token` is configured in Courier Settings and is the same token Shiipp uses for the customer sync request. Validate this token on your receiving endpoint to confirm the request originates from Shiipp.
+
+<Accordion title="Retry behavior on failed delivery">
+  If your endpoint does not return an HTTP `2xx` response, Shiipp retries the delivery up to **5 times** using exponential backoff. The retry intervals are approximately 30 seconds, 2 minutes, 10 minutes, 30 minutes, and 2 hours. If all five retries fail, the event is marked as undelivered and no further attempts are made.
+</Accordion>
+
+<Accordion title="Inspecting delivery attempts">
+  Open the **System Logs** in the Shiipp dashboard to view recent webhook delivery attempts. Each entry shows the target URL, the HTTP response code received, and the timestamp of the attempt. Use this to diagnose delivery failures and verify that your endpoint is receiving payloads correctly.
+</Accordion>
+
+<Warning>
+  Make sure your webhook endpoint responds within a reasonable timeout (recommended: under 5 seconds). Long-running processes triggered by a webhook should be handled asynchronously — acknowledge the request immediately and process the payload in the background to avoid missed retries.
+</Warning>

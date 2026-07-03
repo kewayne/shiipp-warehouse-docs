@@ -1,19 +1,11 @@
 {
-  "$schema": "https://mintlify.com/docs.json",
-  "name": "Shiipp",
+  "projectType": "saas",
+  "projectName": "Shiipp",
+  "projectDescription": "A multi-tenant warehouse management and logistics platform for freight forwarders and courier companies, offering package tracking, prealert intake, flight manifests, and automated billing.",
   "theme": "luma",
-  "favicon": "https://media.brand.dev/c8ed45a3-dddc-48fd-bae6-05fc19b36600.png",
-  "colors": {
-    "primary": "#065ea1",
-    "light": "#76aed2"
-  },
-  "navbar": {
-    "primary": {
-      "type": "button",
-      "label": "Get Started",
-      "href": "/quickstart"
-    }
-  },
+  "primaryColor": "#065ea1",
+  "lightColor": "#76aed2",
+  "darkColor": null,
   "navigation": {
     "tabs": [
       {
@@ -122,5 +114,40 @@
         ]
       }
     ]
-  }
+  },
+  "keyFeatures": [
+    "Prealert submission API for courier partners (API key auth)",
+    "Automated customer list sync from courier systems via configurable endpoint",
+    "CSV bulk customer upload with upsert logic",
+    "Package intake and warehouse scanning with prealert pre-fill",
+    "Flight manifest creation with AWB auto-detection and courier breakdown",
+    "Tiered weight-based billing engine with air freight rates and invoice generation",
+    "Webhook payload designer for custom courier API mapping",
+    "Role-based access control (admin, manager, warehouse, courier)",
+    "Two-factor authentication (TOTP + backup codes)",
+    "Real-time background worker with Redis queue for package and manifest sync",
+    "Public tracking portal for end-customer shipment visibility",
+    "CSV/XLSX package export",
+    "Invoice Ninja and Stripe billing integrations"
+  ],
+  "publicApiSurface": [
+    "POST /api/Prealert.php — Submit a prealert (API key auth, public courier endpoint)",
+    "GET/POST/PUT/DELETE /api/ManagePrealerts.php — Manage prealerts (JWT auth)",
+    "POST /api/RetrievePackages.php — List/filter/export packages (JWT auth)",
+    "POST /api/UpdatePackage.php — Update package fields (JWT auth)",
+    "GET /api/LookupTracking.php — Scan-time tracking lookup (JWT auth)",
+    "GET/POST /api/SyncCustomer.php — Trigger or check customer sync (JWT auth)",
+    "POST /api/UploadCustomers.php — Bulk CSV customer import (JWT auth)",
+    "GET/POST/PUT/DELETE /api/ManageCustomers.php — Customer CRUD (JWT auth)",
+    "GET /api/Customers.php — List customers with pagination (JWT auth)",
+    "GET /api/SearchCustomers.php — Basic and fuzzy customer search (JWT auth)",
+    "POST /api/CreateManifest.php — Create a manifest (JWT auth)",
+    "GET /api/GetManifest.php — Get manifest details and packages (JWT auth)",
+    "POST /api/ManageManifest.php — Update manifest status, add/remove packages (JWT auth)",
+    "POST /api/GenerateCourierInvoice.php — Generate billing invoice (JWT auth)",
+    "GET /api/LoadCourierBills.php — Load billing history (JWT auth)",
+    "GET/POST /api/CourierSettingsAPI.php — Manage courier profile and API keys (JWT auth)",
+    "GET/POST/PUT /api/GetCourierRates.php — Manage rate tiers and air freight (JWT auth)",
+    "POST /api/login.php — Authenticate and receive JWT token (public)"
+  ]
 }

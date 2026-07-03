@@ -1,0 +1,53 @@
+---
+title: "Integrate Your Courier System with Shiipp"
+sidebarTitle: "Overview"
+description: "Connect your courier platform to Shiipp to automate prealerts, sync customer records, and receive real-time package and manifest status webhooks."
+---
+
+Shiipp provides a dedicated integration layer for courier partners, giving you programmatic control over prealerts, customer data, and real-time event notifications — all without manual data entry or back-and-forth communication with the warehouse team.
+
+## Integration Capabilities
+
+Shiipp exposes three integration capabilities that work together to keep your system and the warehouse in sync.
+
+<CardGroup cols={3}>
+  <Card title="Prealert API" icon="paper-plane">
+    POST advance shipment notifications to Shiipp before packages physically arrive at the warehouse. The warehouse sees your prealerts immediately and uses them to auto-fill customer and shipment details at the point of scanning.
+  </Card>
+  <Card title="Customer Sync" icon="users">
+    Expose a customer list endpoint on your side. Shiipp calls it automatically every 8 hours to keep customer records current — no manual imports required.
+  </Card>
+  <Card title="Webhooks" icon="webhook">
+    Receive HTTP callbacks from Shiipp the moment a package is logged or a manifest changes status. Use the Payload Builder to shape the JSON structure to match your own system's expectations.
+  </Card>
+</CardGroup>
+
+## Prerequisites
+
+Before you can use any of the capabilities above, you need an active Shiipp courier account. Contact your Shiipp administrator to be onboarded as a courier partner. Once onboarded, you receive:
+
+- **An API key** — used to authenticate requests to the Prealert endpoint
+- **Access to Courier Settings** — the dashboard section where you configure your endpoint URLs, API token, and sync preferences
+
+<Note>
+  If you do not yet have a courier account, reach out to your Shiipp administrator. You cannot generate API keys or configure endpoints until your courier profile is active.
+</Note>
+
+## Where to Go Next
+
+Use the guides below to set up each part of the integration.
+
+<CardGroup cols={2}>
+  <Card title="API Keys" icon="key" href="/courier/api-keys">
+    Find your API key in the dashboard, understand how to pass it in requests, and follow best practices for keeping it secure.
+  </Card>
+  <Card title="Customer List Format" icon="table" href="/courier/customer-list-format">
+    Learn the JSON format your customer endpoint must return and understand how Shiipp maps and upserts customer records on each sync.
+  </Card>
+  <Card title="Submitting Prealerts" icon="inbox" href="/courier/submitting-prealerts">
+    Use the Prealert API to send advance shipment notifications with tracking numbers, customer codes, vendor names, and package descriptions.
+  </Card>
+  <Card title="Webhook Payload Builder" icon="sliders" href="/courier/webhook-payload-builder">
+    Customize the JSON structure of outbound webhooks using Shiipp's drag-and-drop Payload Builder so your system receives exactly the fields it needs.
+  </Card>
+</CardGroup>

@@ -1,0 +1,192 @@
+---
+title: "Update Package Fields via the Shiipp API"
+sidebarTitle: "Update Package"
+description: "POST /api/UpdatePackage.php — update package fields like weight, tracking number, and customer assignment. JWT Bearer token required."
+---
+
+The **UpdatePackage** endpoint allows you to modify individual fields on an existing package record. Only the fields you include in the request body are changed — omitted fields are left untouched. This makes the endpoint safe for partial updates without needing to re-submit the full package payload.
+
+## Endpoint
+
+```
+POST /api/UpdatePackage.php
+```
+
+**Authentication:** JWT Bearer token with `package:edit` permission required.
+
+```
+Authorization: Bearer <your_token>
+```
+
+---
+
+## Request Body
+
+<ParamField body="package_id" type="string" required>
+  The UUID of the package you want to update. You can retrieve this from the [List Packages](/api-reference/packages/retrieve) endpoint.
+</ParamField>
+
+<ParamField body="user_code" type="string">
+  Reassign the package to a different customer by providing their user code.
+</ParamField>
+
+<ParamField body="first_name" type="string">
+  Update the first name associated with this package.
+</ParamField>
+
+<ParamField body="last_name" type="string">
+  Update the last name associated with this package.
+</ParamField>
+
+<ParamField body="shipper" type="string">
+  Update the shipper or sender name (e.g., `"Amazon"`, `"eBay Seller"`).
+</ParamField>
+
+<ParamField body="description" type="string">
+  Update the description of the package contents (e.g., `"Clothing - T-Shirts"`).
+</ParamField>
+
+<ParamField body="weight" type="number">
+  Update the package weight. Value must be provided in **pounds (LBS)**.
+</ParamField>
+
+<ParamField body="length" type="number">
+  Update the package length dimension, in inches.
+</ParamField>
+
+<ParamField body="width" type="number">
+  Update the package width dimension, in inches.
+</ParamField>
+
+<ParamField body="height" type="number">
+  Update the package height dimension, in inches.
+</ParamField>
+
+<ParamField body="package_type" type="string">
+  Update the package type classification (e.g., `"box"`, `"envelope"`, `"pallet"`).
+</ParamField>
+
+<ParamField body="tracking_number" type="string">
+  Update or correct the carrier tracking number assigned to this package.
+</ParamField>
+
+---
+
+## Example Requests
+
+<CodeGroup>
+
+```json Update Weight and Description
+{
+  "package_id": "pkg-uuid-here",
+  "weight": 4.2,
+  "description": "Clothing - T-Shirts"
+}
+```
+
+```json Reassign Customer
+{
+  "package_id": "pkg-uuid-here",
+  "user_code": "CUST099",
+  "first_name": "Marcus",
+  "last_name": "Brown"
+}
+```
+
+```bash cURL
+curl -X POST https://app.shiipp.com/api/UpdatePackage.php \
+  -H "Authorization: Bearer <your_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "package_id": "pkg-uuid-here",
+    "weight": 4.2,
+    "description": "Clothing - T-Shirts"
+  }'
+```
+
+</CodeGroup>
+
+---
+
+## Responses
+
+### Success — Fields Updated
+
+Returned when one or more fields were changed successfully.
+
+```json
+{
+  "status": "success",
+  "message": "Update successful.",
+  "data": {
+    "fields_updated": 2,
+    "package_id": "pkg-uuid-here"
+  }
+}
+```
+
+<ResponseField name="status" type="string">
+  `"success"` when the update was applied.
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Confirmation message.
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  <Expandable title="data fields">
+    <ResponseField name="fields_updated" type="integer">
+      The number of fields that were changed in this request.
+    </ResponseField>
+    <ResponseField name="package_id" type="string">
+      The UUID of the package that was updated.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+---
+
+### Success — No Changes Detected
+
+Returned when the submitted values are identical to what's already stored. No database write occurs.
+
+```json
+{
+  "status": "success",
+  "message": "No changes detected."
+}
+```
+
+<Note>
+  A `"No changes detected."` response is still an HTTP `200`. This is not an error — it simply means the package already has the submitted values and no write was necessary.
+</Note>
+
+---
+
+### Error Responses
+
+| HTTP Status | Cause |
+|---|---|
+| `400` | `package_id` is missing from the request body |
+| `403` | The authenticated courier does not own this package |
+| `404` | No package found matching the provided `package_id` |
+
+---
+
+## Post-Update Sync Behavior
+
+<Warning>
+  After any successful update, the package's `is_synced` flag is automatically reset to `0`. This marks the package for re-synchronization on the next sync cycle. If your integration consumes sync status, account for this behavior when processing update events.
+</Warning>
+
+---
+
+## Role-Based Access
+
+<Note>
+  **Courier role users** can only update packages that belong to their own courier account. Attempting to update a package assigned to a different courier will return a `403 Forbidden` error.
+</Note>
+
+<Tip>
+  To update dimensions (length, width, height) and weight together in a single call, include all four fields in one request body. Each will be counted individually in `fields_updated`.
+</Tip>

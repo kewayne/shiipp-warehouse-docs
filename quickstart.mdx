@@ -1,47 +1,108 @@
 ---
-title: "Quickstart"
-description: "Begin with a guide on the fastest path to a successful outcome"
+title: "Get Started with Shiipp in Minutes"
+sidebarTitle: "Quickstart"
+description: "Learn how to log in, obtain your credentials, and make your first API call to Shiipp — the logistics and warehouse management platform."
 ---
 
-Describe how someone begins using your product. What is the first thing they need to do? Are there any prerequisites?
+Shiipp gives you two authentication paths depending on your role: courier partners authenticate using a dedicated API key scoped to the public Prealert endpoint, while all other API calls use a short-lived JWT Bearer token obtained from the login endpoint. Follow the steps below to go from zero to your first successful API call.
 
-A quickstart should take someone from zero to using your product. They'll get a quick win and a sense of what they can accomplish.
-
-## Prerequisites
-
-Before you begin, you must have:
-
-- Requirement one (for example, Node.js 18+, a free account, an API key)
-- Requirement two (for example, a compatible device, a compatible browser, a compatible operating system)
-
-## Get started
+<Note>
+  Your Shiipp base URL (for example, `https://acme.shiipp.com`) is provisioned by your Shiipp administrator. Replace `https://your-domain` in every example below with the URL they provide.
+</Note>
 
 <Steps>
-  <Step title="Install">
-    Describe how to install your product or sign up.
+  <Step title="Log in and obtain your Bearer token">
+    Send a `POST` request to `/api/login.php` with your Shiipp credentials. On success, the response contains an `access_token` you will use for all subsequent requests.
 
-    ```bash
-    npm install your-package
+    **Request**
+
+    ```json
+    POST https://your-domain/api/login.php
+    Content-Type: application/json
+
+    {
+      "username": "youruser",
+      "password": "yourpassword"
+    }
+    ```
+
+    **Response**
+
+    ```json
+    {
+      "status": "success",
+      "token_type": "Bearer",
+      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "expires_in": 28800,
+      "user": {
+        "id": "42",
+        "username": "youruser",
+        "role": "admin"
+      }
+    }
+    ```
+
+    Copy the value of `access_token` — you will need it in the next step.
+  </Step>
+
+  <Step title="Attach the token to every API request">
+    Pass the token in the `Authorization` header on all subsequent calls to the Shiipp API.
+
+    ```http
+    Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+    ```
+
+    Tokens are valid for **8 hours**. After expiry, repeat Step 1 to obtain a fresh token. Your application should handle `401 Unauthorized` responses by re-authenticating automatically.
+  </Step>
+
+  <Step title="Courier partners: locate your API key">
+    If you are a courier partner, you have a separate API key that grants access to the public Prealert endpoint. You do not need a JWT token for this endpoint.
+
+    1. Log in to the Shiipp dashboard.
+    2. Navigate to **Settings → Courier Settings**.
+    3. Copy the value shown under **API Key**.
+
+    Pass this key in every Prealert request using the `X-API-KEY` header:
+
+    ```http
+    X-API-KEY: your_api_key_here
     ```
   </Step>
-  <Step title="Configure">
-    Describe any setup or configuration needed before first use.
 
-    ```bash
-    your-cli init
-    ```
-  </Step>
-  <Step title="Run it">
-    Show the first thing a user does to see it working.
+  <Step title="Submit your first prealert">
+    With your API key in hand, submit a prealert by posting shipment details to `/api/Prealert.php`.
 
-    ```bash
-    your-cli start
+    **Request**
+
+    ```json
+    POST https://your-domain/api/Prealert.php
+    X-API-KEY: your_api_key_here
+    Content-Type: application/json
+
+    {
+      "UserCode": "CUST001",
+      "TrackingNumber": "1Z9999999999999999",
+      "Vendor": "Amazon",
+      "Description": "Electronics"
+    }
     ```
+
+    **Success response**
+
+    ```json
+    {
+      "status": "success",
+      "message": "Pre-alert logged successfully",
+      "data": {
+        "prealert_id": "uuid-here"
+      }
+    }
+    ```
+
+    Store the returned `prealert_id` to track and reference this shipment in future API calls.
   </Step>
 </Steps>
 
 <Tip>
-  Give people a way to get help. This could be a link to a support page, a chat with a customer support agent, or a forum for your product.
-
-  Example: Need help? Reach out to us at [support@yourcompany.com](mailto:support@yourcompany.com).
+  Ready to go deeper with courier integrations? See the [Courier Overview](/courier/overview) for the full list of endpoints, field definitions, and webhook configuration.
 </Tip>

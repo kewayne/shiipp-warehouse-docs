@@ -1,0 +1,85 @@
+---
+title: "Flight Manifests: Grouping Packages for Dispatch"
+sidebarTitle: "Manifests"
+description: "A manifest in Shiipp groups packages into a flight container. Learn manifest statuses, AWB numbers, and how status changes trigger courier notifications."
+---
+
+A manifest is a flight container that groups multiple packages together into a single consolidated shipment. Instead of tracking each package's departure individually, you assemble a manifest, attach packages to it, and then advance the manifest through its lifecycle — from assembly all the way to confirmed delivery. Every status change is recorded in a full audit trail, and courier partners are notified automatically when key milestones are reached.
+
+## Manifest Fields
+
+| Field | Description |
+|---|---|
+| `manifest_number` | Auto-generated reference for the manifest (e.g. `MAN-20240115-A3B2`) |
+| `awb_number` | Air Waybill number — used by Shiipp to automatically detect the airline |
+| `airline_prefix` | Detected from the AWB prefix (see airline prefix table below) |
+| `flight_date` | The scheduled departure date for this shipment |
+| `status` | The current lifecycle stage of the manifest |
+| `notes` | Free-text field for any additional notes about this shipment |
+
+### Airline Prefix Detection
+
+When you enter an AWB number, Shiipp reads the numeric prefix and resolves the airline automatically.
+
+| Prefix | Airline |
+|--------|---------|
+| `106` | Caribbean Airlines |
+| `810` | AmeriJet |
+| `175` | IBC Airways |
+
+<Tip>
+  If your AWB prefix does not resolve to a known airline, contact your administrator to have it added to the platform configuration.
+</Tip>
+
+## Manifest Statuses
+
+A manifest moves through four statuses from creation to closure. You advance the status manually, and Shiipp handles downstream notifications automatically.
+
+| Status | Meaning |
+|--------|---------|
+| `draft` | The manifest is being assembled. Packages can be freely added or removed. |
+| `ready` | The manifest has been finalized and is ready for dispatch. |
+| `shipped` | The shipment has departed. Packages are in transit. |
+| `completed` | Delivery has been confirmed and the manifest is closed. |
+
+<Tabs>
+  <Tab title="Draft">
+    Use the **draft** status while you are still adding or removing packages. No notifications are sent at this stage. You can edit all manifest fields freely.
+  </Tab>
+  <Tab title="Ready">
+    Mark a manifest as **ready** once you have finalized its package list and it is cleared for dispatch. Shiipp automatically sends an email notification to every courier partner who has packages on this manifest.
+  </Tab>
+  <Tab title="Shipped">
+    Advance the status to **shipped** once the flight has departed. Shiipp again notifies all affected courier partners so they can inform their customers that packages are in transit.
+  </Tab>
+  <Tab title="Completed">
+    Set the status to **completed** when delivery is confirmed at the destination. A final notification is sent to courier partners, and the manifest is closed.
+  </Tab>
+</Tabs>
+
+## Automated Courier Notifications
+
+<CardGroup cols={2}>
+  <Card title="Triggered Automatically" icon="envelope">
+    When a manifest transitions to **ready**, **shipped**, or **completed**, Shiipp sends email notifications to all courier partners whose packages are included in that manifest — no manual outreach required.
+  </Card>
+  <Card title="Scoped by Courier" icon="filter">
+    Each courier partner only receives notifications for manifests that contain their own packages. They are never exposed to another partner's shipment data.
+  </Card>
+</CardGroup>
+
+## Audit Trail
+
+Every status change on a manifest is recorded automatically. The audit log captures:
+
+- The previous and new status
+- The user who made the change
+- The exact date and time of the change
+
+This gives you a complete, tamper-evident history of every manifest from creation to closure, which is useful for dispute resolution and compliance.
+
+## Deleting a Manifest
+
+<Warning>
+  A manifest can only be deleted when it has **no packages attached**. Remove all packages from the manifest before attempting to delete it. This safeguard prevents accidental data loss and ensures that package records are never orphaned.
+</Warning>

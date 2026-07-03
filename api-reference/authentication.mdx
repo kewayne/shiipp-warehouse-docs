@@ -1,0 +1,243 @@
+---
+title: "API Authentication: Tokens and API Keys"
+sidebarTitle: "Authentication"
+description: "Obtain a JWT Bearer token via POST /api/login.php or use your X-API-KEY for the public Prealert endpoint. Includes 2FA flow and error codes."
+---
+
+Shiipp uses two authentication schemes: **JWT Bearer tokens** for all standard API endpoints, and **API key authentication** for the public prealert submission endpoint used by courier integrations. This page covers how to obtain and use both credential types, how to handle the optional two-factor authentication flow, and what error responses to expect when authentication fails.
+
+## Obtaining a JWT Token
+
+Send a `POST` request to `/api/login.php` with your Shiipp username and password. On success, the response contains an `access_token` that must be included in the `Authorization` header of every subsequent request.
+
+**Endpoint:** `POST /api/login.php`
+
+### Request Body
+
+<ParamField body="action" type="string" required>
+  Must be the literal string `"login"`.
+</ParamField>
+
+<ParamField body="username" type="string" required>
+  Your Shiipp account username.
+</ParamField>
+
+<ParamField body="password" type="string" required>
+  Your Shiipp account password.
+</ParamField>
+
+### Example Login Request
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://your-domain.com/api/login.php \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "login",
+    "username": "your_username",
+    "password": "your_password"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch("https://your-domain.com/api/login.php", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    action: "login",
+    username: "your_username",
+    password: "your_password",
+  }),
+});
+
+const { status, data } = await response.json();
+
+if (status === "success") {
+  const token = data.access_token;
+  // Store token securely for subsequent requests
+}
+```
+
+```php PHP
+$payload = json_encode([
+    'action'   => 'login',
+    'username' => 'your_username',
+    'password' => 'your_password',
+]);
+
+$ch = curl_init('https://your-domain.com/api/login.php');
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_POST           => true,
+    CURLOPT_POSTFIELDS     => $payload,
+    CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
+]);
+
+$response = json_decode(curl_exec($ch), true);
+$token = $response['data']['access_token'] ?? null;
+```
+
+</CodeGroup>
+
+### Success Response (No 2FA)
+
+```json
+{
+  "status": "success",
+  "message": "Login successful",
+  "data": {
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "token_type": "Bearer",
+    "user": {
+      "id": "user-uuid",
+      "full_name": "Jane Smith",
+      "username": "jsmith",
+      "role": "courier",
+      "courier_id": "courier-uuid",
+      "courier_code": "SKY",
+      "two_factor_enabled": false
+    }
+  }
+}
+```
+
+### Using the Token
+
+Include the token in the `Authorization` header for every subsequent API call. Tokens expire after **8 hours**. When your token expires, repeat the login flow to obtain a new one — there is no refresh token endpoint.
+
+```http
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+<Tip>
+  Store the token in a secure location such as an environment variable, a secrets manager, or an encrypted session store. Never commit tokens to source control.
+</Tip>
+
+### Login Response Fields
+
+<ResponseField name="access_token" type="string">
+  The JWT token to use in the `Authorization: Bearer` header.
+</ResponseField>
+
+<ResponseField name="token_type" type="string">
+  Always `"Bearer"`.
+</ResponseField>
+
+<ResponseField name="user" type="object">
+  Profile information for the authenticated user.
+
+  <Expandable title="user object fields">
+    <ResponseField name="id" type="string">
+      UUID of the authenticated user.
+    </ResponseField>
+    <ResponseField name="full_name" type="string">
+      Display name of the user.
+    </ResponseField>
+    <ResponseField name="username" type="string">
+      Login username.
+    </ResponseField>
+    <ResponseField name="role" type="string">
+      The user's role. One of `admin`, `manager`, or `courier`.
+    </ResponseField>
+    <ResponseField name="courier_id" type="string">
+      UUID of the courier account linked to this user. Present when `role` is `"courier"`.
+    </ResponseField>
+    <ResponseField name="courier_code" type="string">
+      Short alphanumeric code identifying the courier (e.g. `"SKY"`).
+    </ResponseField>
+    <ResponseField name="two_factor_enabled" type="boolean">
+      Whether two-factor authentication is enabled for this account. When `true`, the login flow requires a second step.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+---
+
+## Two-Factor Authentication (2FA) Flow
+
+If the account has 2FA enabled, the initial `POST /api/login.php` call returns a `"2fa_required"` status instead of an `access_token`. The response includes a short-lived `preauth_token` that acts as a challenge ticket.
+
+### Step 1 — Initial Login Response (2FA Required)
+
+```json
+{
+  "status": "2fa_required",
+  "message": "Two-factor authentication required",
+  "data": {
+    "preauth_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
+}
+```
+
+<Note>
+  The `preauth_token` is valid for **5 minutes**. If it expires before the user submits their code, restart the flow from the initial login request.
+</Note>
+
+### Step 2 — Submit the TOTP Code
+
+Make a second `POST /api/login.php` call with `action: "verify_2fa"`, the `preauth_token` from step one, and the six-digit TOTP code from the user's authenticator app.
+
+<ParamField body="action" type="string" required>
+  Must be the literal string `"verify_2fa"`.
+</ParamField>
+
+<ParamField body="preauth_token" type="string" required>
+  The `preauth_token` returned in the `2fa_required` response.
+</ParamField>
+
+<ParamField body="code" type="string" required>
+  The six-digit TOTP code from the user's authenticator app. Backup codes are also accepted in place of a TOTP code.
+</ParamField>
+
+```json
+{
+  "action": "verify_2fa",
+  "preauth_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "code": "123456"
+}
+```
+
+On success, the response is identical in shape to the standard login success — you receive a full `access_token` and `user` object. From this point the token is used identically regardless of whether 2FA was involved.
+
+<Tip>
+  Backup codes work as a drop-in replacement for the TOTP `code` field. Prompt the user to use a backup code if they cannot access their authenticator app.
+</Tip>
+
+---
+
+## API Key Authentication
+
+The prealert submission endpoint (`POST /api/Prealert.php`) is designed for server-to-server courier integrations and uses a static API key instead of a JWT token. This avoids the need to manage token expiry in automated pipelines.
+
+**Obtain your API key** from the Courier Settings section of the Shiipp dashboard. Each courier account has its own unique key.
+
+### Sending the API Key
+
+The recommended method is to pass the key as a request header:
+
+```http
+X-API-KEY: your_api_key
+```
+
+You can also pass it as a query parameter, though this is not recommended for production use because query strings are more likely to appear in server logs and browser history.
+
+```
+POST /api/Prealert.php?api_key=your_api_key
+```
+
+<Warning>
+  Avoid query-parameter authentication in production. Prefer the `X-API-KEY` header so your key is not captured in access logs, proxy caches, or browser history.
+</Warning>
+
+---
+
+## Authentication Error Reference
+
+| HTTP Code | `status` Field | Cause |
+|---|---|---|
+| `400` | `fail` | Required fields (`action`, `username`, `password`) are missing from the login request |
+| `401` | `fail` | Invalid username or password |
+| `401` | `fail` | Invalid or expired 2FA code |
+| `401` | `error` | JWT token is missing, malformed, or expired on a protected endpoint |
+| `403` | `fail` | Account exists but has been disabled by an administrator |

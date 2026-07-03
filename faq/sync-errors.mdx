@@ -1,0 +1,97 @@
+---
+title: "Troubleshoot Customer Sync and Webhook Errors"
+sidebarTitle: "Sync Errors"
+description: "Diagnose and fix common errors with Shiipp's automatic customer sync and outbound webhook delivery, including HTTP errors and JSON format issues."
+---
+
+Shiipp connects to your systems through two outbound integration channels: **customer list sync**, which keeps your customer records up to date by pulling from your endpoint, and **package and manifest webhooks**, which push real-time events to your platform. This page walks you through diagnosing and resolving the most common errors in both channels.
+
+## Customer Sync Issues
+
+<Accordion title="Sync failed with HTTP 401 or 403">
+  Shiipp calls your customer list endpoint with an `Authorization: Bearer <your_api_token>` header. If you're seeing a 401 or 403 response, check the following:
+
+  - Your endpoint is configured to accept Bearer token authentication.
+  - The `api_token` saved in **Courier Settings** matches exactly what your endpoint expects.
+  - Your endpoint is not IP-restricted in a way that blocks Shiipp's outbound IPs.
+
+  <Note>
+    If your server requires IP allowlisting, contact Shiipp support to obtain the current list of outbound IP addresses.
+  </Note>
+</Accordion>
+
+<Accordion title="Sync failed with HTTP 500 or non-200">
+  Shiipp logs the HTTP status code and the first 300 characters of your endpoint's response body for every sync attempt. To troubleshoot:
+
+  - Check your server logs for errors that occurred during the request.
+  - Ensure your endpoint returns HTTP **200** and a valid JSON body.
+  - Test by manually calling your endpoint using the same Bearer token to reproduce the issue outside of Shiipp.
+</Accordion>
+
+<Accordion title="Invalid JSON response">
+  Your endpoint must return a **JSON array** at the root level — not an object and not plain text. Shiipp cannot parse any other format.
+
+  - ✅ **Valid:** `[{...}, {...}]`
+  - ❌ **Invalid:** `{"customers": [{...}]}` — Shiipp expects the root to be an array, not a wrapper object.
+  - ❌ **Invalid:** A plain text message or an HTML error page.
+
+  <Tip>
+    Paste your endpoint's response into a JSON validator (such as [jsonlint.com](https://jsonlint.com)) to confirm the structure before testing in Shiipp.
+  </Tip>
+</Accordion>
+
+<Accordion title="Customers are missing after sync">
+  If the sync completes successfully but some customers don't appear, work through these checks:
+
+  - Verify your endpoint returns the expected `UserCode` field (also accepted as `user_code`).
+  - Shiipp automatically uppercases and trims `UserCode` values — `CUST001` and `cust001` are treated as identical.
+  - An **empty array** response (`[]`) does not delete existing customers; it simply adds no new ones.
+  - Confirm the `last_sync` timestamp updated — this is visible in **Settings** and indicates whether the sync actually ran.
+</Accordion>
+
+<Accordion title="When does the sync run?">
+  Shiipp runs customer sync automatically **every 8 hours**. If you need to pull in changes sooner, you can trigger a manual sync at any time from **Settings > Customer Sync** by clicking **Sync Now**. The timestamp of the most recent sync is displayed on that same page.
+</Accordion>
+
+## Webhook Delivery Issues
+
+<Accordion title="My webhook endpoint isn't receiving calls">
+  Start by confirming your configuration and connectivity:
+
+  - Verify your webhook URL is saved in **Courier Settings** — use `api_url_add_package` for new package events and `api_url_status_update` for manifest status changes.
+  - Your endpoint must be **publicly accessible**. Endpoints behind a firewall, VPN, or private network will not receive Shiipp's outbound requests.
+  - Check **System Logs** in Shiipp for recent dispatch attempts and their HTTP response codes.
+
+  <Note>
+    Failed webhook deliveries are retried up to **5 times** using exponential backoff. If all retries fail, the event is marked as undelivered in the logs.
+  </Note>
+</Accordion>
+
+<Accordion title="Webhook payload format is wrong">
+  Use the **Webhook Payload Builder** (accessible from **System > Webhook Payload Designer**) to customize the exact JSON structure Shiipp sends to your endpoint. You can map Shiipp variables like `{{tracking_number}}` and `{{weight}}` to the field names your receiving system expects — no code changes required.
+
+  For a full walkthrough of the payload builder, see the [Webhook Payload Builder guide](/courier/webhook-payload-builder).
+</Accordion>
+
+<Accordion title="Webhook returns 401 or authentication fails">
+  Shiipp sends `Authorization: Bearer <your_api_token>` with every outbound webhook request. If your endpoint is returning a 401, verify:
+
+  - Your endpoint is correctly validating the Bearer token.
+  - The `api_token` value in **Courier Settings** matches what your endpoint expects.
+
+  <Warning>
+    If you recently rotated your API key, you must update your endpoint's expected token to match the new value — the old key is invalidated immediately on rotation.
+  </Warning>
+</Accordion>
+
+<Accordion title="How do I inspect raw webhook logs?">
+  Go to **Logs** in the Shiipp sidebar. You can filter entries by source and view the full details of each webhook attempt, including:
+
+  - The complete JSON request payload sent by Shiipp
+  - The full JSON response body returned by your endpoint
+  - The HTTP status code
+  - The timestamp of the attempt
+  - Any error messages recorded during delivery
+
+  The Logs page is the best starting point when debugging delivery failures — it gives you the full picture without needing to instrument your own server first.
+</Accordion>

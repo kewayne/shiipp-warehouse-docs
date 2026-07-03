@@ -1,0 +1,100 @@
+---
+title: "Build and Dispatch Flight Manifests in Shiipp"
+sidebarTitle: "Building Manifests"
+description: "Learn how to create flight manifests, add packages, update AWB numbers, and change status to dispatch packages — with automatic courier notifications."
+---
+
+A manifest in Shiipp groups a set of packages into a single flight container that travels together to its destination. Building a manifest is how you move packages from your warehouse inventory into a trackable, dispatchable shipment — and how courier partners get notified that their freight is on the way.
+
+<Note>
+  This guide is for **managers and above**. You need at least the Manager role to create, edit, or change the status of a manifest.
+</Note>
+
+## Building a Manifest
+
+<Steps>
+  <Step title="Create a new manifest">
+    Open the sidebar and click **Manifests**, then click **New Manifest**. A blank manifest form opens.
+  </Step>
+
+  <Step title="Enter the AWB number and flight details">
+    Type the **Air Waybill (AWB)** number into the AWB field. Shiipp detects the airline automatically based on the numeric prefix:
+
+    <Tabs>
+      <Tab title="Caribbean Airlines">
+        AWB prefix **106-** — Shiipp assigns Caribbean Airlines automatically.
+      </Tab>
+      <Tab title="AmeriJet">
+        AWB prefix **810-** — Shiipp assigns AmeriJet automatically.
+      </Tab>
+      <Tab title="IBC Airways">
+        AWB prefix **175-** — Shiipp assigns IBC Airways automatically.
+      </Tab>
+    </Tabs>
+
+    After entering the AWB, fill in the **Flight Date** and any **Notes** relevant to this shipment (e.g., special handling instructions or customs reference numbers).
+  </Step>
+
+  <Step title="Add packages to the manifest">
+    In the **Available Packages** panel, search for packages by tracking number, customer name, or user code. Select the packages you want to include and click **Add to Manifest**.
+
+    <Warning>
+      A package can only belong to one manifest at a time. If a package is already assigned to another manifest, it won't appear in the available list. Remove it from its current manifest before reassigning it.
+    </Warning>
+  </Step>
+
+  <Step title="Review the manifest summary">
+    Before changing the status, verify the summary panel:
+
+    - **Total package count**
+    - **Total weight** in both LBS and KG
+    - **Per-courier breakdown** — how many packages and total weight per courier partner
+
+    Correct any discrepancies now. Adding or removing packages after a status change is possible but generates an audit log entry.
+  </Step>
+
+  <Step title="Set status to Ready">
+    When the manifest is finalized and packages are staged for pickup, change the status to **Ready**. Shiipp automatically sends an email notification to all courier partners who have packages on this manifest, letting them know their freight is ready for collection.
+  </Step>
+
+  <Step title="Set status to Shipped">
+    Once the flight departs, change the status to **Shipped**. Courier partners receive another email notification confirming their packages are in transit.
+  </Step>
+
+  <Step title="Set status to Completed">
+    After the destination confirms successful delivery, change the status to **Completed** to close out the manifest.
+  </Step>
+</Steps>
+
+<Note>
+  Email notifications to courier partners are sent automatically when you move a manifest to **Ready**, **Shipped**, or **Completed**. No manual emails needed.
+</Note>
+
+## Removing Packages from a Manifest
+
+Open the manifest detail view, select the packages you want to remove, and click **Remove**. The packages return to **available** status and can be added to a different manifest.
+
+## Deleting a Manifest
+
+A manifest can only be deleted when it contains **zero packages**. Remove all packages first, then use the **Delete** option from the manifest detail view. This prevents accidental deletion of manifests that still hold active freight.
+
+## Exporting a Manifest
+
+Click **Export** from the manifest detail view to download the manifest in a format suitable for customs filings or airline documentation.
+
+## Audit Trail
+
+Every action taken on a manifest is logged automatically:
+
+<Accordion title="What the audit log captures">
+  - The user who made the change
+  - The timestamp of the change
+  - The previous and new status
+  - Any remarks entered at the time of the status change
+
+  You can view the full audit trail from the **History** tab on any manifest detail page.
+</Accordion>
+
+<Tip>
+  Add remarks whenever you change a manifest status — especially for **Shipped** and **Completed**. A flight number or delivery reference in the remarks field makes disputes much easier to resolve later.
+</Tip>

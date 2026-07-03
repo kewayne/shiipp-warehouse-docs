@@ -1,0 +1,239 @@
+---
+title: "Authenticate API Requests to Shiipp"
+sidebarTitle: "Authentication"
+description: "Shiipp uses JWT Bearer tokens for dashboard API calls and API keys for courier partner endpoints. Learn how to obtain and use each credential type."
+---
+
+Shiipp protects every API endpoint with one of two credential types. Dashboard and management endpoints require a short-lived JWT Bearer token issued at login. The public Prealert endpoint used by courier partners accepts a long-lived API key instead. Understanding which method applies to your integration is the first step before making any API call.
+
+<CardGroup cols={2}>
+  <Card title="JWT Bearer Token" icon="key">
+    For all dashboard and management API calls. Obtain a token by calling `POST /api/login.php`, then pass it in the `Authorization` header.
+  </Card>
+  <Card title="API Key (X-API-KEY)" icon="shield-halved">
+    Exclusively for the public `POST /api/Prealert.php` endpoint used by courier partners. Retrieve your key from **Courier Settings** in the dashboard.
+  </Card>
+</CardGroup>
+
+---
+
+## JWT Bearer Token
+
+Every request to a management or dashboard endpoint must carry a valid Bearer token. Tokens expire after **8 hours**, so your integration should re-authenticate when it receives a `401` response.
+
+### Obtain a token
+
+Call `POST /api/login.php` with your credentials:
+
+```json
+{
+  "action": "login",
+  "username": "your_username",
+  "password": "your_password"
+}
+```
+
+A successful response returns:
+
+```json
+{
+  "status": "success",
+  "token_type": "Bearer",
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "expires_in": 28800,
+  "user": {
+    "id": "42",
+    "username": "your_username",
+    "role": "admin",
+    "courier_id": null
+  }
+}
+```
+
+### Use the token
+
+Attach the `access_token` value to every subsequent request:
+
+```http
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+### Code examples
+
+<CodeGroup>
+
+```bash curl
+curl -X POST https://your-domain/api/login.php \
+  -H "Content-Type: application/json" \
+  -d '{"action":"login","username":"your_username","password":"your_password"}'
+
+# Then use the returned token:
+curl https://your-domain/api/some-endpoint \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+```javascript JavaScript (fetch)
+// Step 1: Authenticate
+const loginRes = await fetch("https://your-domain/api/login.php", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    action: "login",
+    username: "your_username",
+    password: "your_password",
+  }),
+});
+
+const { access_token } = await loginRes.json();
+
+// Step 2: Call a protected endpoint
+const res = await fetch("https://your-domain/api/some-endpoint", {
+  headers: {
+    Authorization: `Bearer ${access_token}`,
+  },
+});
+
+const data = await res.json();
+```
+
+```php PHP
+<?php
+// Step 1: Authenticate
+$ch = curl_init("https://your-domain/api/login.php");
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_POST           => true,
+    CURLOPT_HTTPHEADER     => ["Content-Type: application/json"],
+    CURLOPT_POSTFIELDS     => json_encode([
+        "action"   => "login",
+        "username" => "your_username",
+        "password" => "your_password",
+    ]),
+]);
+$response     = json_decode(curl_exec($ch), true);
+$accessToken  = $response["access_token"];
+curl_close($ch);
+
+// Step 2: Call a protected endpoint
+$ch = curl_init("https://your-domain/api/some-endpoint");
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_HTTPHEADER     => ["Authorization: Bearer {$accessToken}"],
+]);
+$data = json_decode(curl_exec($ch), true);
+curl_close($ch);
+?>
+```
+
+</CodeGroup>
+
+---
+
+## Two-Factor Authentication (2FA)
+
+If your account has 2FA enabled, the standard login call does **not** return an `access_token` immediately. Instead, it returns an intermediate state that requires you to verify your TOTP code before receiving a usable token.
+
+### Step 1 — Initiate login
+
+Send the same `POST /api/login.php` request with your username and password. When 2FA is required, the response looks like this:
+
+```json
+{
+  "status": "2fa_required",
+  "preauth_token": "pre_eyJhbGciOiJIUzI1NiJ9..."
+}
+```
+
+### Step 2 — Verify your TOTP code
+
+Send a second `POST /api/login.php` with the `verify_2fa` action, including the `preauth_token` from Step 1 and the six-digit code from your authenticator app:
+
+<Tabs>
+  <Tab title="TOTP code">
+    ```json
+    {
+      "action": "verify_2fa",
+      "preauth_token": "pre_eyJhbGciOiJIUzI1NiJ9...",
+      "code": "123456"
+    }
+    ```
+  </Tab>
+  <Tab title="Backup code">
+    ```json
+    {
+      "action": "verify_2fa",
+      "preauth_token": "pre_eyJhbGciOiJIUzI1NiJ9...",
+      "code": "ABCD-EFGH"
+    }
+    ```
+
+    Use one of the backup codes generated when you first enabled 2FA. Each backup code is single-use and is invalidated immediately after it is consumed.
+  </Tab>
+</Tabs>
+
+A successful verification returns the standard `access_token` response:
+
+```json
+{
+  "status": "success",
+  "token_type": "Bearer",
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "expires_in": 28800
+}
+```
+
+<Note>
+  The `preauth_token` is short-lived and single-use. If verification fails three consecutive times, the token is invalidated and you must restart the login flow from Step 1.
+</Note>
+
+---
+
+## API Keys (Courier Partners)
+
+Courier partner API keys grant access to a single endpoint: `POST /api/Prealert.php`. They do not grant access to any other part of the Shiipp API.
+
+### Obtain your API key
+
+1. Log in to the Shiipp dashboard.
+2. Go to **Settings → Courier Settings**.
+3. Copy the value displayed under **API Key**.
+
+### Pass the key in requests
+
+<Tabs>
+  <Tab title="HTTP header (recommended)">
+    ```http
+    POST https://your-domain/api/Prealert.php
+    X-API-KEY: your_api_key_here
+    Content-Type: application/json
+    ```
+  </Tab>
+  <Tab title="Query parameter (not recommended)">
+    ```http
+    POST https://your-domain/api/Prealert.php?api_key=your_api_key_here
+    Content-Type: application/json
+    ```
+
+    Passing the key as a query parameter can expose it in server access logs, browser history, and referrer headers. Use the `X-API-KEY` header whenever possible.
+  </Tab>
+</Tabs>
+
+<Warning>
+  Never embed your API key in client-side code, mobile app binaries, or public repositories. If your key is compromised, regenerate it immediately from the **Courier Settings** page — the old key is invalidated the moment a new one is generated.
+</Warning>
+
+### Regenerate a key
+
+Navigate to **Settings → Courier Settings** and click **Regenerate API Key**. Confirm the action in the dialog. Update all integrations with the new key before the page is closed, as the previous key stops working immediately.
+
+---
+
+## Authentication Error Reference
+
+The table below covers the HTTP status codes returned when authentication fails.
+
+| Status Code | Meaning |
+|-------------|---------|
+| `401` | Missing or invalid token / API key. Re-authenticate to obtain fresh credentials. |
+| `403` | Credentials are valid but the account is disabled or lacks permission for the requested resource. Contact your Shiipp administrator. |
+| `405` | Wrong HTTP method used on the endpoint (for example, `GET` instead of `POST`). Check the method in your request. |

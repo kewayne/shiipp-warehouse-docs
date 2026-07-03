@@ -1,0 +1,106 @@
+---
+title: "Format Your Customer List for Shiipp Sync"
+sidebarTitle: "Customer List Format"
+description: "Shiipp automatically pulls your customer list every 8 hours from an endpoint you configure. Learn the required JSON format and field names."
+---
+
+Shiipp keeps your customer records current by periodically calling a GET endpoint that you host and configure in Courier Settings. Rather than requiring manual imports, the sync runs automatically in the background — your endpoint is the single source of truth for customer data within your Shiipp courier account.
+
+## How the Sync Works
+
+Configure the URL of your customer list endpoint in the **`api_url_get_customers`** field under Courier Settings. Once saved, Shiipp calls that endpoint on a fixed schedule.
+
+- **Automatic sync** — Shiipp pulls from your endpoint every **8 hours**
+- **Manual sync** — Trigger an immediate sync at any time from **Settings > Customer Sync**
+- **Upsert behavior** — Existing customers are updated in place; new customers are inserted. No customers are deleted as a result of a sync.
+
+<Note>
+  UserCode is the primary identifier Shiipp uses to match incoming prealerts to customers. It must be the same code your customers use when shopping with your service. Keep it consistent across your customer list and prealert submissions.
+</Note>
+
+## Required JSON Format
+
+Your endpoint must return an HTTP `200` response with `Content-Type: application/json` and a body containing a JSON **array** of customer objects. Shiipp accepts field names in both camelCase and snake_case — you do not need to change your existing API to match a single casing convention.
+
+```json
+[
+  {
+    "UserCode": "CUST001",
+    "first_name": "Jane",
+    "last_name": "Smith",
+    "branch": "Kingston"
+  },
+  {
+    "UserCode": "CUST002",
+    "FirstName": "Marcus",
+    "LastName": "Brown",
+    "Branch": "Montego Bay"
+  }
+]
+```
+
+<Tip>
+  Returning an empty array `[]` is valid — Shiipp logs a warning but does not delete your existing customer records. This is useful during maintenance windows when your data source is temporarily unavailable.
+</Tip>
+
+## Field Mapping Reference
+
+Shiipp recognises multiple accepted names for each field and normalises them to a canonical internal field.
+
+| Accepted Field Names | Maps To | Required |
+|---|---|---|
+| `UserCode`, `user_code` | `user_code` — customer identifier | **Yes** |
+| `first_name`, `FirstName` | `first_name` | **Yes** |
+| `last_name`, `LastName` | `last_name` | **Yes** |
+| `branch`, `Branch` | `branch` — office or location name | No |
+
+<Note>
+  `UserCode` values are automatically **uppercased and trimmed** by Shiipp before matching or storing. A value of `" cust001 "` is stored as `"CUST001"`. Make sure your prealert submissions use the same normalised form.
+</Note>
+
+## Sync Behavior Details
+
+<Accordion title="Upsert logic — new vs. existing customers">
+  Shiipp matches incoming records against existing customers using the normalised `user_code` value scoped to your courier account. If a customer with that code already exists, their `first_name`, `last_name`, and `branch` fields are updated. If no match is found, a new customer record is created.
+</Accordion>
+
+<Accordion title="Empty array responses">
+  If your endpoint returns an empty array, Shiipp logs a warning in the system logs and leaves your existing customer records unchanged. This prevents accidental data loss during outages or misconfigured endpoints.
+</Accordion>
+
+<Accordion title="Invalid or non-200 responses">
+  If your endpoint returns a non-`200` status code, an empty body, or a body that is not valid JSON, Shiipp marks the sync attempt as failed and records the error in the system logs. No customer data is modified when a sync fails.
+</Accordion>
+
+## Authentication
+
+Shiipp authenticates to your endpoint by sending the following headers with every sync request:
+
+| Header | Value |
+|---|---|
+| `Authorization` | `Bearer <your_api_token>` |
+| `Accept` | `application/json` |
+
+Configure the `api_token` value in Courier Settings. This token is sent as the Bearer token so your endpoint can verify the request originates from Shiipp.
+
+<Warning>
+  Your customer list endpoint is called from Shiipp's servers, not from a browser. Make sure your endpoint is publicly accessible over HTTPS and that your firewall or hosting configuration allows inbound requests from external sources.
+</Warning>
+
+## Troubleshooting
+
+<Accordion title="The sync timestamp is not updating">
+  Navigate to **Settings > Customer Sync** and check the **Last Sync** timestamp. If it is not updating, verify that the `api_url_get_customers` value in Courier Settings is correct and reachable from a public network. Try opening the URL directly in a browser or with `curl` to confirm it returns a valid JSON response.
+</Accordion>
+
+<Accordion title="Sync errors in the system logs">
+  Open the system logs and filter for customer sync events. Common causes include:
+  - Your endpoint returning a non-`200` status code
+  - A `Content-Type` header that is not `application/json`
+  - Malformed JSON in the response body (e.g. trailing commas, unquoted keys)
+  - The `api_token` in Courier Settings not matching what your endpoint expects
+</Accordion>
+
+<Accordion title="Customers appear in Shiipp but prealerts are not matching">
+  Confirm that the `UserCode` values in your customer list exactly match — after uppercasing and trimming — the `UserCode` values you send in prealert submissions. A mismatch of even one character prevents automatic customer association at the warehouse.
+</Accordion>

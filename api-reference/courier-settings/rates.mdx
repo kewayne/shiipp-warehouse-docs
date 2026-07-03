@@ -1,0 +1,265 @@
+---
+title: "Configure Courier Billing Rates via API"
+sidebarTitle: "Billing Rates"
+description: "GET and POST /api/GetCourierRates.php — read global and per-courier weight tier rates, save rate tables, copy defaults, and update air freight rates."
+---
+
+The Billing Rates endpoint lets authorised users read and manage the weight-tier fee tables that Shiipp uses to calculate shipping charges. You can retrieve global platform defaults, inspect or override rates for a specific courier, copy defaults to a courier in a single call, and set the per-courier air freight multiplier — all through the same endpoint.
+
+## Endpoint
+
+```
+/api/GetCourierRates.php
+```
+
+**Authentication:** JWT Bearer token — include your token as `Authorization: Bearer <token>` on every request. This endpoint requires the `billing:manage` or `courier:manage` permission and is accessible to **admin** and **manager** roles only.
+
+---
+
+## GET — Retrieve Rates
+
+Send a `GET` request to fetch rate tables. Without a query parameter the response includes global default rates and a list of all couriers with their specific rate overrides. Append `?courier_id=<uuid>` to scope the response to a single courier.
+
+### Query Parameters
+
+<ParamField query="courier_id" type="string">
+  UUID of the courier whose specific rates you want to retrieve. When omitted, the response includes rate data for all couriers.
+</ParamField>
+
+### Response Fields
+
+<ResponseField name="status" type="string" required>
+  `"success"` on a successful retrieval.
+</ResponseField>
+
+<ResponseField name="data" type="object" required>
+  <Expandable title="data fields">
+    <ResponseField name="global_default_rates" type="array">
+      The platform-wide default rate tiers applied to any courier that does not have specific rates defined.
+      <Expandable title="rate tier object">
+        <ResponseField name="id" type="integer">
+          Unique identifier for this rate tier row.
+        </ResponseField>
+        <ResponseField name="startweight" type="number">
+          Lower bound (inclusive) of the weight range in lbs.
+        </ResponseField>
+        <ResponseField name="endweight" type="number">
+          Upper bound (inclusive) of the weight range in lbs.
+        </ResponseField>
+        <ResponseField name="fee" type="number">
+          Flat fee in the platform's configured currency charged for packages in this weight band.
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+    <ResponseField name="courier" type="object">
+      Present when `courier_id` is supplied. Contains the courier's identity and their specific rate configuration.
+      <Expandable title="courier object fields">
+        <ResponseField name="courier_id" type="string">
+          UUID of the courier.
+        </ResponseField>
+        <ResponseField name="courier_name" type="string">
+          Display name of the courier.
+        </ResponseField>
+        <ResponseField name="courier_code" type="string">
+          Short alphanumeric code identifying the courier (e.g. `"SKY"`).
+        </ResponseField>
+        <ResponseField name="air_freight_rate" type="number">
+          Per-lb air freight rate charged by this courier, expressed as a currency amount.
+        </ResponseField>
+        <ResponseField name="specific_rates" type="array">
+          Weight-tier rate rows that override the global defaults for this courier. Empty when `uses_global_rates` is `true`.
+          <Expandable title="specific rate tier object">
+            <ResponseField name="id" type="integer">
+              Unique identifier for this rate tier row.
+            </ResponseField>
+            <ResponseField name="startweight" type="number">
+              Lower bound (inclusive) of the weight range in lbs.
+            </ResponseField>
+            <ResponseField name="endweight" type="number">
+              Upper bound (inclusive) of the weight range in lbs.
+            </ResponseField>
+            <ResponseField name="fee" type="number">
+              Flat fee charged for packages in this weight band.
+            </ResponseField>
+          </Expandable>
+        </ResponseField>
+        <ResponseField name="uses_global_rates" type="boolean">
+          `true` when no courier-specific rates are defined and the global defaults apply.
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<Note>
+  If `uses_global_rates` is `true` for a courier, it means no courier-specific rates are defined and the global defaults apply to all their packages.
+</Note>
+
+### Example Response (Single Courier)
+
+```json
+{
+  "status": "success",
+  "data": {
+    "global_default_rates": [
+      { "id": 1, "startweight": 0,     "endweight": 5,  "fee": 5.00  },
+      { "id": 2, "startweight": 5.01,  "endweight": 15, "fee": 10.00 },
+      { "id": 3, "startweight": 15.01, "endweight": 50, "fee": 18.00 }
+    ],
+    "courier": {
+      "courier_id": "courier-uuid",
+      "courier_name": "SkyDrop",
+      "courier_code": "SKY",
+      "air_freight_rate": 1.50,
+      "specific_rates": [
+        { "id": 10, "startweight": 0, "endweight": 5, "fee": 4.50 }
+      ],
+      "uses_global_rates": false
+    }
+  }
+}
+```
+
+---
+
+## POST Actions
+
+All POST requests must be sent as `application/json`. Every successful action returns the same envelope:
+
+```json
+{
+  "status": "success",
+  "message": "Rates saved successfully."
+}
+```
+
+Use the `action` field in the request body to specify the operation.
+
+---
+
+### `save_rates` — Create or Update Rate Tiers
+
+Upserts the complete rate table for a courier or for the global defaults. The submitted `rates` array is treated as the **full intended state**: rows with an `id` are updated, rows without an `id` are inserted, and any existing rows for that courier **not** present in the array are deleted.
+
+<Tabs>
+  <Tab title="Request Fields">
+    <ParamField body="action" type="string" required>
+      Must be `"save_rates"`.
+    </ParamField>
+    <ParamField body="courier_id" type="string">
+      UUID of the courier whose rates you are setting. Set to `null` or omit entirely to update the global default rate table.
+    </ParamField>
+    <ParamField body="rates" type="array" required>
+      Array of rate tier objects. Include `id` to update an existing row; omit `id` to create a new row.
+      <Expandable title="rate tier object">
+        <ParamField body="id" type="integer">
+          ID of an existing rate row to update. Omit to insert a new row.
+        </ParamField>
+        <ParamField body="startweight" type="number" required>
+          Start of the weight range in lbs (inclusive).
+        </ParamField>
+        <ParamField body="endweight" type="number" required>
+          End of the weight range in lbs (inclusive).
+        </ParamField>
+        <ParamField body="fee" type="number" required>
+          Flat fee charged for packages in this weight band.
+        </ParamField>
+      </Expandable>
+    </ParamField>
+  </Tab>
+  <Tab title="Example">
+    ```json
+    {
+      "action": "save_rates",
+      "courier_id": "courier-uuid",
+      "rates": [
+        { "startweight": 0,    "endweight": 5,  "fee": 4.50 },
+        { "id": 10, "startweight": 5.01, "endweight": 15, "fee": 9.00 }
+      ]
+    }
+    ```
+  </Tab>
+</Tabs>
+
+<Warning>
+  Rows present in the database for the target courier that are **not** included in the `rates` array will be permanently deleted. Always submit the complete desired rate table in a single call.
+</Warning>
+
+---
+
+### `copy_default` — Copy Global Defaults to a Courier
+
+Clears all existing specific rate rows for the specified courier and replaces them with an exact copy of the current global default tiers. After this action, `uses_global_rates` will be `false` and the courier will have its own mirrored copy of the defaults.
+
+<Tabs>
+  <Tab title="Request Fields">
+    <ParamField body="action" type="string" required>
+      Must be `"copy_default"`.
+    </ParamField>
+    <ParamField body="courier_id" type="string" required>
+      UUID of the courier that should receive a copy of the global defaults.
+    </ParamField>
+  </Tab>
+  <Tab title="Example">
+    ```json
+    {
+      "action": "copy_default",
+      "courier_id": "courier-uuid"
+    }
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+### `delete_rate` — Remove a Single Rate Tier
+
+Deletes one rate tier row by its ID. Use this for surgical removals rather than a full `save_rates` replacement when only a single row needs to be dropped.
+
+<Tabs>
+  <Tab title="Request Fields">
+    <ParamField body="action" type="string" required>
+      Must be `"delete_rate"`.
+    </ParamField>
+    <ParamField body="rate_id" type="integer" required>
+      The `id` of the rate tier row to delete.
+    </ParamField>
+  </Tab>
+  <Tab title="Example">
+    ```json
+    {
+      "action": "delete_rate",
+      "rate_id": 10
+    }
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+### `update_air_freight` — Set the Air Freight Rate
+
+Updates the per-lb air freight rate charged by a specific courier. This value is applied on top of standard weight-tier fees for air shipments.
+
+<Tabs>
+  <Tab title="Request Fields">
+    <ParamField body="action" type="string" required>
+      Must be `"update_air_freight"`.
+    </ParamField>
+    <ParamField body="courier_id" type="string" required>
+      UUID of the courier whose air freight rate you are updating.
+    </ParamField>
+    <ParamField body="air_freight_rate" type="number" required>
+      New air freight rate per lb in the platform's configured currency.
+    </ParamField>
+  </Tab>
+  <Tab title="Example">
+    ```json
+    {
+      "action": "update_air_freight",
+      "courier_id": "courier-uuid",
+      "air_freight_rate": 2.00
+    }
+    ```
+  </Tab>
+</Tabs>

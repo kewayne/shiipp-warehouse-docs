@@ -1,0 +1,108 @@
+---
+title: "Create a New Flight Manifest via API"
+sidebarTitle: "Create Manifest"
+description: "POST /api/CreateManifest.php — create a new flight manifest container. Requires manifest:create permission. Returns manifest_id and manifest_number."
+---
+
+The Create Manifest endpoint initializes a new flight manifest container in Shiipp, automatically generating a unique manifest number and recording the creation event in the audit trail. Once created, the manifest starts in `draft` status and can be populated with packages before being advanced through the dispatch workflow.
+
+## Endpoint
+
+```
+POST /api/CreateManifest.php
+```
+
+## Authentication
+
+All requests must include a valid JWT Bearer token in the `Authorization` header. The authenticated user must hold the `manifest:create` permission, which is granted to the **admin**, **manager**, and **warehouse** roles.
+
+```
+Authorization: Bearer <your_jwt_token>
+```
+
+## Request Body
+
+All body parameters are optional. Omitting `warehouse_id` causes the manifest to be assigned to the tenant's primary warehouse.
+
+<ParamField body="awb_number" type="string">
+  Air Waybill number for the flight (e.g., `810-12345678`). When provided, Shiipp uses the numeric prefix to auto-detect and populate the associated airline.
+</ParamField>
+
+<ParamField body="warehouse_id" type="string">
+  UUID of the warehouse to associate with this manifest. Defaults to the tenant's primary warehouse when omitted.
+</ParamField>
+
+<ParamField body="remarks" type="string">
+  Free-text remarks written to the manifest audit log at creation time. Useful for recording batch notes, shipment context, or operator references.
+</ParamField>
+
+## Example Request
+
+<CodeGroup>
+```json Body
+{
+  "awb_number": "810-12345678",
+  "remarks": "January batch - SkyDrop"
+}
+```
+
+```bash cURL
+curl -X POST https://app.shiipp.com/api/CreateManifest.php \
+  -H "Authorization: Bearer <your_jwt_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "awb_number": "810-12345678",
+    "remarks": "January batch - SkyDrop"
+  }'
+```
+</CodeGroup>
+
+## Response
+
+### 201 — Created
+
+A manifest was successfully initialized. The response includes the generated `manifest_id` (used in all subsequent manifest operations) and the human-readable `manifest_number`.
+
+```json
+{
+  "status": "success",
+  "message": "Manifest created and initialized in audit log",
+  "data": {
+    "manifest_id": "abc123def456",
+    "manifest_number": "MAN-20240115-A3B2",
+    "status": "draft"
+  }
+}
+```
+
+<ResponseField name="status" type="string">
+  Always `"success"` on a 201 response.
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  <Expandable title="data fields">
+    <ResponseField name="manifest_id" type="string">
+      Unique UUID for the newly created manifest. Use this value in all subsequent calls to GetManifest and ManageManifest.
+    </ResponseField>
+    <ResponseField name="manifest_number" type="string">
+      Auto-generated human-readable identifier in the format `MAN-YYYYMMDD-XXXX`, where `XXXX` is a random alphanumeric suffix unique within the day.
+    </ResponseField>
+    <ResponseField name="status" type="string">
+      Initial lifecycle status. Always `"draft"` for newly created manifests.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Notes
+
+<Note>
+  Manifest numbers follow the format `MAN-YYYYMMDD-XXXX`, where the date component reflects the UTC creation date. The four-character suffix is randomly generated to avoid collisions across bulk-creation workflows.
+</Note>
+
+<Note>
+  Every manifest creation event is automatically written to the manifest audit trail. No additional call is needed to initialize the log — the `remarks` field provides an optional first entry.
+</Note>
+
+<Tip>
+  All new manifests begin with `status: draft`. Advance the manifest through the workflow — `ready`, `shipped`, `completed` — using the [Manage Manifests](/api-reference/manifests/manage) endpoint's `update_meta` action.
+</Tip>

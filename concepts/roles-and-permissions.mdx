@@ -1,0 +1,63 @@
+---
+title: "Roles and Permissions in Shiipp"
+sidebarTitle: "Roles"
+description: "Shiipp uses role-based access control. Learn what each role (admin, manager, warehouse, courier) can see and do in the platform."
+---
+
+Shiipp uses role-based access control (RBAC) to ensure every user sees only the features and data relevant to their responsibilities. When an account is created, your administrator assigns one of four roles — **Admin**, **Manager**, **Warehouse**, or **Courier** — and that role determines what the user can access across the platform.
+
+## The Four Roles
+
+<CardGroup cols={2}>
+  <Card title="Admin" icon="shield-halved">
+    Full access to every area of the platform, including user management, billing, courier settings, and all operational data.
+  </Card>
+  <Card title="Manager" icon="user-tie">
+    Full operational access to the dashboard, packages, manifests, and billing. Has limited access to courier settings and cannot manage users.
+  </Card>
+  <Card title="Warehouse" icon="warehouse">
+    Directed to the scan module on login. Can log packages, look up tracking numbers, and view manifests — but has no access to billing or settings.
+  </Card>
+  <Card title="Courier" icon="truck">
+    Scoped to their own courier organization. Can only view and act on the packages, prealerts, and billing records associated with their courier account.
+  </Card>
+</CardGroup>
+
+## Permissions Matrix
+
+The table below summarises what each role can access across the main sections of Shiipp.
+
+| Role      | Dashboard | Packages     | Manifests  | Billing        | Courier Settings | User Management |
+|-----------|-----------|--------------|------------|----------------|------------------|-----------------|
+| Admin     | Full      | Full         | Full       | Full           | Full             | Full            |
+| Manager   | Full      | Full         | Full       | Full           | Limited          | No              |
+| Warehouse | Read      | Scan / Edit  | View       | No             | No               | No              |
+| Courier   | Own packages | Own packages | View own | Own invoices   | Own settings     | No              |
+
+## Role Details
+
+<Accordion title="Courier Role">
+  Users with the Courier role are scoped entirely to their courier organization. They can only see packages, prealerts, and billing records that are directly associated with their courier account. This isolation ensures that no courier partner can view another partner's shipment data. When a courier company is onboarded onto Shiipp, IAM credentials are generated and issued to them automatically — no manual setup is required.
+</Accordion>
+
+<Accordion title="Warehouse Role">
+  Staff assigned the Warehouse role are taken directly to the scan module when they log in. From there, they can log incoming packages by scanning or entering tracking numbers, look up existing packages, and view manifest assignments. Warehouse users have read-only access to the main dashboard and cannot access billing, courier configuration, or user management.
+</Accordion>
+
+<Accordion title="Admin Role">
+  Admins have unrestricted access to every feature in Shiipp. They are responsible for creating and managing user accounts, configuring courier partners, and overseeing billing. There should always be at least one Admin account active in your organization.
+</Accordion>
+
+<Accordion title="Manager Role">
+  Managers share most of the same operational capabilities as Admins — full access to the dashboard, packages, manifests, and billing — but cannot create or edit user accounts. Their access to courier settings is limited to viewing, not editing.
+</Accordion>
+
+## Assigning Roles
+
+<Note>
+  Role assignment is done by your administrator from the **Users** section of the platform. If you need your role changed, contact whoever holds the Admin role in your organization.
+</Note>
+
+<Tip>
+  Courier partners (external companies) receive IAM credentials automatically when they are onboarded. You do not need to manually create credentials for each courier — Shiipp handles this as part of the onboarding workflow.
+</Tip>

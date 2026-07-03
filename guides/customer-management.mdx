@@ -1,0 +1,130 @@
+---
+title: "Manage Customer Records in Shiipp"
+sidebarTitle: "Customer Management"
+description: "Add, edit, search, and bulk-import customer records in Shiipp. Customers are linked to couriers and matched to packages by user code."
+---
+
+Customers in Shiipp are the end-recipients of packages — the individuals or businesses that a courier partner delivers to. Every customer record is associated with a courier partner and identified by a unique **UserCode**. That UserCode is the key that connects prealerts and incoming packages to the right customer automatically at intake.
+
+<Note>
+  All roles can work with customer records. Courier partners see and manage **only their own customers**. Managers and Admins can view and edit customers across all couriers.
+</Note>
+
+---
+
+## Adding a Customer Manually
+
+<Steps>
+  <Step title="Open the Customers list">
+    Click **Customers** in the sidebar to open the customer directory.
+  </Step>
+
+  <Step title="Start a new record">
+    Click **Add Customer** in the top-right corner. A customer form opens.
+  </Step>
+
+  <Step title="Fill in the customer details">
+    Complete the following fields:
+
+    | Field | Required | Notes |
+    |---|---|---|
+    | **UserCode** | Yes | Must be unique across the system. Shiipp uppercases it automatically. |
+    | **First Name** | Yes | — |
+    | **Last Name** | Yes | — |
+    | **Branch** | No | Office, hub, or location (e.g., Kingston, Montego Bay) |
+  </Step>
+
+  <Step title="Assign a courier">
+    - **Admins and Managers:** Select the courier partner this customer belongs to from the **Courier** dropdown.
+    - **Courier users:** The customer is automatically assigned to your own courier account. The dropdown is not shown.
+  </Step>
+
+  <Step title="Save the record">
+    Click **Save**. The customer appears in the list immediately and is now available for package matching and prealert lookup.
+  </Step>
+</Steps>
+
+---
+
+## Bulk Import via CSV
+
+Use CSV import to add or update large numbers of customers at once — for example, when onboarding a new courier partner or syncing from an external system.
+
+### CSV Format
+
+Your file must have columns in this exact order:
+
+```csv
+user_code,first_name,last_name,branch
+CUST001,Jane,Smith,Kingston
+CUST002,Marcus,Brown,Montego Bay
+```
+
+- The **header row** is detected and skipped automatically.
+- The **branch** column is optional — leave it blank if not applicable, but include the column.
+- **Upsert behavior:** if a UserCode already exists, Shiipp updates that record. If the UserCode is new, Shiipp creates a new customer.
+
+<Warning>
+  Make sure the column order matches exactly. Shiipp reads columns by position, not by header name. A mismatched column order will import incorrect data.
+</Warning>
+
+### Running the Import
+
+<Steps>
+  <Step title="Prepare your CSV file">
+    Open your spreadsheet tool and export (or build) a CSV with the four columns in order: `user_code`, `first_name`, `last_name`, `branch`. Remove any extra columns before uploading.
+  </Step>
+
+  <Step title="Navigate to the import page">
+    Go to **Customers > Import** in the sidebar.
+  </Step>
+
+  <Step title="Upload the file">
+    Click **Choose File**, select your CSV, then click **Upload**. Shiipp processes the file immediately.
+  </Step>
+
+  <Step title="Review the results">
+    After processing, Shiipp displays a summary showing the number of records created and updated. If any rows were skipped due to errors, they are listed with a reason.
+  </Step>
+</Steps>
+
+---
+
+## Automatic Sync from Your System
+
+If you're a courier partner, Shiipp can pull your customer list from your own system automatically — no manual uploads needed. Shiipp checks for updates every **8 hours**.
+
+<CardGroup cols={2}>
+  <Card title="Customer List Format" icon="file-csv" href="/courier/customer-list-format">
+    Learn the required endpoint format and authentication method Shiipp uses to fetch your customer list automatically.
+  </Card>
+  <Card title="Prealerts" icon="bell" href="/courier/submitting-prealerts">
+    Submit prealerts before packages ship so Shiipp can auto-fill customer details at intake.
+  </Card>
+</CardGroup>
+
+---
+
+## Searching and Filtering Customers
+
+Use the **search bar** at the top of the Customers list to find records by:
+
+- Name (first or last)
+- Email address
+- UserCode
+
+### Advanced Fuzzy Search
+
+For approximate name matches — useful when you're unsure of the exact spelling — append `?advanced=true` to the Customers page URL. With advanced search enabled, Shiipp uses **Levenshtein distance** and **Soundex phonetic matching** to surface close matches even when names are slightly misspelled.
+
+### Filtering by Branch
+
+Use the **Branch** dropdown above the customer table to narrow the list to a specific location or hub.
+
+<Note>
+  UserCodes are uppercased automatically by Shiipp. `CUST001` and `cust001` refer to the same customer — you never need to worry about case when searching or importing.
+</Note>
+
+<Tip>
+  If packages are frequently landing as "unknown" at intake, the most common cause is a missing or mismatched UserCode. Run a bulk CSV import to ensure your full customer list is loaded before your next shipment arrives.
+</Tip>

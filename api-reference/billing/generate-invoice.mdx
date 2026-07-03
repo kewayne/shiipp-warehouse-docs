@@ -1,0 +1,182 @@
+---
+title: "Generate a Courier Invoice by Date Range"
+sidebarTitle: "Generate Invoice"
+description: "POST /api/GenerateCourierInvoice.php — compute fees for all packages in a date range, apply weight tiers, and return a detailed invoice preview."
+---
+
+The Generate Invoice endpoint computes a full fee breakdown for a courier's packages within a specified date range, applying your configured weight-tier pricing rules to produce an itemized invoice preview. The response includes warehouse and courier details, a per-tier summary, and a line-item list of every package with its applied fee — giving you everything needed to review charges before committing the invoice through the billing UI.
+
+## Endpoint
+
+```
+POST /api/GenerateCourierInvoice.php
+```
+
+## Authentication
+
+All requests must include a valid JWT Bearer token in the `Authorization` header.
+
+```
+Authorization: Bearer <your_jwt_token>
+```
+
+## Request Body
+
+<ParamField body="courier_id" type="string" required>
+  UUID of the courier to invoice. All packages belonging to this courier that fall within the date range will be included in the calculation.
+</ParamField>
+
+<ParamField body="start_date" type="string" required>
+  Start of the billing period in `YYYY-MM-DD` format (inclusive).
+</ParamField>
+
+<ParamField body="end_date" type="string" required>
+  End of the billing period in `YYYY-MM-DD` format (inclusive).
+</ParamField>
+
+## Example Request
+
+<CodeGroup>
+```json Body
+{
+  "courier_id": "courier-uuid-here",
+  "start_date": "2024-01-01",
+  "end_date": "2024-01-31"
+}
+```
+
+```bash cURL
+curl -X POST https://app.shiipp.com/api/GenerateCourierInvoice.php \
+  -H "Authorization: Bearer <your_jwt_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "courier_id": "courier-uuid-here",
+    "start_date": "2024-01-01",
+    "end_date": "2024-01-31"
+  }'
+```
+</CodeGroup>
+
+## Response
+
+### 200 — Success
+
+The response body contains four sections: `warehouse` (billing entity details), `courier` (the invoiced party), `summary` (aggregate totals), `breakdown` (per-tier fee computation), and `packages` (individual line items).
+
+```json
+{
+  "status": "success",
+  "data": {
+    "warehouse": {
+      "name": "Shiipp Warehouse",
+      "address": "..."
+    },
+    "courier": {
+      "courier_name": "SkyDrop",
+      "courier_code": "SKY",
+      "...": "..."
+    },
+    "summary": {
+      "total_packages": 47,
+      "total_weight": 162.5,
+      "total_fees": 348.00
+    },
+    "breakdown": [
+      {
+        "range": "0.00 - 5.00 LBS",
+        "count": 22,
+        "rate": 5.00,
+        "subtotal": 110.00
+      },
+      {
+        "range": "5.01 - 15.00 LBS",
+        "count": 18,
+        "rate": 10.00,
+        "subtotal": 180.00
+      }
+    ],
+    "packages": [
+      {
+        "package_id": "pkg-uuid",
+        "tracking_number": "1Z999...",
+        "weight": 3.5,
+        "applied_fee": 5.00
+      }
+    ]
+  }
+}
+```
+
+## Response Fields
+
+<ResponseField name="data.warehouse" type="object">
+  Details of the warehouse acting as the billing entity on the invoice (name, address, and contact information).
+</ResponseField>
+
+<ResponseField name="data.courier" type="object">
+  Profile of the invoiced courier, including `courier_name`, `courier_code`, and contact details.
+</ResponseField>
+
+<ResponseField name="data.summary" type="object">
+  <Expandable title="summary fields">
+    <ResponseField name="total_packages" type="integer">
+      Total number of packages included in this invoice computation.
+    </ResponseField>
+    <ResponseField name="total_weight" type="number">
+      Combined weight of all included packages in pounds.
+    </ResponseField>
+    <ResponseField name="total_fees" type="number">
+      Sum of all applied fees across all weight tiers, in the tenant's billing currency.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="data.breakdown" type="array">
+  Per-tier fee summary. Only tiers that matched at least one package are included.
+  <Expandable title="breakdown item fields">
+    <ResponseField name="range" type="string">
+      Human-readable weight range label (e.g., `"0.00 - 5.00 LBS"`).
+    </ResponseField>
+    <ResponseField name="count" type="integer">
+      Number of packages whose weight falls within this tier.
+    </ResponseField>
+    <ResponseField name="rate" type="number">
+      Flat fee applied to each package in this tier.
+    </ResponseField>
+    <ResponseField name="subtotal" type="number">
+      Total fees for this tier (`count × rate`).
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="data.packages" type="array">
+  Individual package line items included in the invoice.
+  <Expandable title="package item fields">
+    <ResponseField name="package_id" type="string">
+      Unique UUID of the package.
+    </ResponseField>
+    <ResponseField name="tracking_number" type="string">
+      Carrier-assigned tracking number.
+    </ResponseField>
+    <ResponseField name="weight" type="number">
+      Package weight in pounds, as recorded at intake.
+    </ResponseField>
+    <ResponseField name="applied_fee" type="number">
+      The fee applied to this package based on its weight tier. `0.00` if no tier matched.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Notes
+
+<Note>
+  Packages whose weight falls outside all configured weight tiers receive an `applied_fee` of `0.00` and are still included in the `packages` array. Review your tier configuration in the billing settings if you see unexpected zero-fee packages.
+</Note>
+
+<Note>
+  The `breakdown` array only contains entries for tiers that had at least one matching package. Empty tiers are omitted to keep the response concise.
+</Note>
+
+<Warning>
+  This endpoint returns a **preview only**. No invoice record is created and no charges are committed. To publish and finalize the invoice, open it in the Shiipp billing UI and use the Publish Invoice action.
+</Warning>

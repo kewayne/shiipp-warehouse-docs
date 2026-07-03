@@ -1,0 +1,90 @@
+---
+title: "Prealerts: Advance Notice Before Package Arrival"
+sidebarTitle: "Prealerts"
+description: "Prealerts let courier partners notify Shiipp about incoming packages before they arrive at the warehouse, enabling faster processing and automatic data prefill."
+---
+
+A prealert is an advance shipment notification submitted by a courier partner before a package physically arrives at the warehouse. By submitting a prealert, the courier tells Shiipp to expect a specific tracking number — and when warehouse staff scan that number at intake, Shiipp automatically matches it to the prealert and pre-fills the customer's name, shipper, and description. This eliminates manual data entry, reduces errors, and speeds up the intake process for everyone involved.
+
+## How Prealert Matching Works
+
+<Steps>
+  <Step title="Courier Submits a Prealert">
+    Before a package ships, the courier partner submits a prealert via the API with the customer's tracking number and details. The prealert is created with a status of **pending**.
+  </Step>
+  <Step title="Package Arrives at Warehouse">
+    The physical parcel reaches your warehouse facility.
+  </Step>
+  <Step title="Warehouse Staff Scans the Tracking Number">
+    A warehouse user scans or enters the carrier tracking number into Shiipp's scan module.
+  </Step>
+  <Step title="Shiipp Matches the Prealert">
+    Shiipp checks for a prealert with a matching tracking number. If found, the customer's name, shipper, and description are pre-filled automatically on the package record.
+  </Step>
+  <Step title="Prealert Transitions to Received">
+    The prealert status automatically updates from **pending** to **received**. No manual action is required.
+  </Step>
+</Steps>
+
+## Prealert Statuses
+
+| Status | Meaning |
+|--------|---------|
+| `pending` | The prealert has been submitted but the package has not yet been received at the warehouse. |
+| `received` | The package has been scanned into the warehouse and matched to this prealert. |
+| `flagged` | The prealert requires manual review before the package can be processed. |
+
+<Note>
+  The transition from **pending** to **received** happens automatically when a matching tracking number is logged. You do not need to manually update the prealert status in the normal workflow.
+</Note>
+
+## Submitting Prealerts via the API
+
+Courier partners submit prealerts programmatically using their API key against the public prealert endpoint.
+
+<Tabs>
+  <Tab title="Endpoint">
+    ```
+    POST /api/Prealert.php
+    ```
+    Authenticate by including your API key in the request. See the [full courier API guide](/courier/submitting-prealerts) for authentication details and request examples.
+  </Tab>
+  <Tab title="Required Fields">
+    | Field | Description |
+    |---|---|
+    | `UserCode` | The customer identifier the package belongs to |
+    | `TrackingNumber` | The carrier-assigned tracking number for the incoming package |
+  </Tab>
+  <Tab title="Optional Fields">
+    | Field | Description |
+    |---|---|
+    | `Vendor` | The sender or vendor the package is coming from |
+    | `Description` | A description of the package contents |
+    | `Reference` | Your internal reference number for this shipment |
+  </Tab>
+</Tabs>
+
+## Duplicate Prevention
+
+<Warning>
+  If you submit a prealert with a tracking number that already exists for your courier account, the API returns a **409 Conflict** error. Check your existing prealerts before resubmitting to avoid duplicate records.
+</Warning>
+
+## Benefits at a Glance
+
+<CardGroup cols={2}>
+  <Card title="Faster Warehouse Intake" icon="gauge-high">
+    Pre-filling customer data from a matched prealert means warehouse staff spend less time on data entry and can process packages more quickly.
+  </Card>
+  <Card title="Fewer Data Entry Errors" icon="circle-check">
+    Because customer details come directly from the courier's submission, there is no risk of a warehouse operator mistyping a name or tracking number.
+  </Card>
+  <Card title="Automatic Status Updates" icon="arrows-rotate">
+    Prealerts resolve themselves — no one needs to manually mark a prealert as received. Shiipp handles the transition the moment the package is scanned.
+  </Card>
+  <Card title="Full API Access" icon="code">
+    Courier partners can integrate prealert submission directly into their own shipping workflows using the REST API and their unique API key.
+  </Card>
+</CardGroup>
+
+For the complete API reference, including authentication, request payloads, and response codes, see the [Submitting Prealerts guide](/courier/submitting-prealerts).
