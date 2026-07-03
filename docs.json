@@ -78,7 +78,8 @@
             "group": "Prealerts",
             "pages": [
               "api-reference/prealerts/submit",
-              "api-reference/prealerts/manage"
+              "api-reference/prealerts/manage",
+              "api-reference/prealerts/submit-prealert-mdx"
             ]
           },
           {
