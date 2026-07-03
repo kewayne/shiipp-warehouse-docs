@@ -1,5 +1,5 @@
 ---
-title: "Create a New Flight Manifest via API"
+title: "Create a New Shiipp Flight Manifest with Audit Trail"
 sidebarTitle: "Create Manifest"
 description: "POST /api/CreateManifest.php — create a new flight manifest container. Requires manifest:create permission. Returns manifest_id and manifest_number."
 ---
@@ -42,7 +42,7 @@ All body parameters are optional. Omitting `warehouse_id` causes the manifest to
 ```json Body
 {
   "awb_number": "810-12345678",
-  "remarks": "January batch - SkyDrop"
+  "remarks": "January batch"
 }
 ```
 
@@ -52,14 +52,14 @@ curl -X POST https://app.shiipp.com/api/CreateManifest.php \
   -H "Content-Type: application/json" \
   -d '{
     "awb_number": "810-12345678",
-    "remarks": "January batch - SkyDrop"
+    "remarks": "January batch"
   }'
 ```
 </CodeGroup>
 
 ## Response
 
-### 201 — Created
+### 200 — Success
 
 A manifest was successfully initialized. The response includes the generated `manifest_id` (used in all subsequent manifest operations) and the human-readable `manifest_number`.
 
@@ -76,7 +76,7 @@ A manifest was successfully initialized. The response includes the generated `ma
 ```
 
 <ResponseField name="status" type="string">
-  Always `"success"` on a 201 response.
+  Always `"success"` on a successful response.
 </ResponseField>
 
 <ResponseField name="data" type="object">

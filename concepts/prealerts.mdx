@@ -1,7 +1,7 @@
 ---
-title: "Prealerts: Advance Notice Before Package Arrival"
+title: "Prealerts: Pre-Arrival Package Notifications in Shiipp"
 sidebarTitle: "Prealerts"
-description: "Prealerts let courier partners notify Shiipp about incoming packages before they arrive at the warehouse, enabling faster processing and automatic data prefill."
+description: "Prealerts let courier partners notify Shiipp about incoming packages before warehouse arrival, enabling faster intake and automatic customer data prefill."
 ---
 
 A prealert is an advance shipment notification submitted by a courier partner before a package physically arrives at the warehouse. By submitting a prealert, the courier tells Shiipp to expect a specific tracking number — and when warehouse staff scan that number at intake, Shiipp automatically matches it to the prealert and pre-fills the customer's name, shipper, and description. This eliminates manual data entry, reduces errors, and speeds up the intake process for everyone involved.
@@ -35,7 +35,7 @@ A prealert is an advance shipment notification submitted by a courier partner be
 | `flagged` | The prealert requires manual review before the package can be processed. |
 
 <Note>
-  The transition from **pending** to **received** happens automatically when a matching tracking number is logged. You do not need to manually update the prealert status in the normal workflow.
+  The transition from **pending** to **received** happens automatically — either when a matching tracking number is scanned at the warehouse, or immediately at submission time if the package has already been logged. You do not need to manually update the prealert status in the normal workflow.
 </Note>
 
 ## Submitting Prealerts via the API
@@ -54,11 +54,11 @@ Courier partners submit prealerts programmatically using their API key against t
     |---|---|
     | `UserCode` | The customer identifier the package belongs to |
     | `TrackingNumber` | The carrier-assigned tracking number for the incoming package |
+    | `Vendor` | The sender or vendor the package is coming from |
   </Tab>
   <Tab title="Optional Fields">
     | Field | Description |
     |---|---|
-    | `Vendor` | The sender or vendor the package is coming from |
     | `Description` | A description of the package contents |
     | `Reference` | Your internal reference number for this shipment |
   </Tab>

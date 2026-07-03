@@ -1,18 +1,18 @@
 ---
-title: "List Customers with Pagination and Search"
+title: "Paginate, Sort, and Filter Shiipp Customers via API"
 sidebarTitle: "List Customers"
-description: "POST /api/Customers.php — retrieve a paginated list of customers with optional search filtering. JWT Bearer token required."
+description: "GET /api/ManageCustomers.php — retrieve a paginated, sortable list of customers with optional search, branch, and courier filtering. JWT token required."
 ---
 
-The **Customers** endpoint returns a paginated list of customer records associated with your Shiipp courier account. An optional `search` parameter lets you filter results by user code, full name, or email without needing to build complex query strings.
+The **ManageCustomers** endpoint returns a paginated, sortable list of customer records associated with your Shiipp courier account. An optional `search` parameter lets you filter results by user code or name, and you can sort by any of the supported fields.
 
 ## Endpoint
 
 ```
-POST /api/Customers.php
+GET /api/ManageCustomers.php
 ```
 
-**Authentication:** JWT Bearer token with `customer:read` permission required.
+**Authentication:** JWT Bearer token required.
 
 ```
 Authorization: Bearer <your_token>
@@ -20,18 +20,34 @@ Authorization: Bearer <your_token>
 
 ---
 
-## Request Body
+## Query Parameters
 
-<ParamField body="page" type="integer" default="1">
+<ParamField query="page" type="integer" default="1">
   The page number to retrieve. Pagination starts at `1`.
 </ParamField>
 
-<ParamField body="limit" type="integer" default="50">
-  Number of customer records to return per page. Maximum allowed value is `500`.
+<ParamField query="limit" type="integer" default="20">
+  Number of customer records to return per page. Maximum allowed value is `100`.
 </ParamField>
 
-<ParamField body="search" type="string">
-  Optional search term. When provided, results are filtered to customers whose `user_code`, `full_name`, or `email` contain the search string (case-insensitive partial match).
+<ParamField query="search" type="string">
+  Optional search term. When provided, results are filtered to customers whose `user_code` or name contain the search string (wildcard partial match, case-insensitive).
+</ParamField>
+
+<ParamField query="branch" type="string">
+  Filter results to customers assigned to a specific branch location (exact match).
+</ParamField>
+
+<ParamField query="courier_id" type="string">
+  Filter results to a specific courier organization. **Admin and manager roles only.** Courier role users are automatically scoped to their own courier.
+</ParamField>
+
+<ParamField query="sort_by" type="string" default="first_name">
+  Field to sort results by. Accepted values: `user_code`, `first_name`, `last_name`, `branch`, `courier_name`, `created_at`, `updated_at`.
+</ParamField>
+
+<ParamField query="sort_dir" type="string" default="ASC">
+  Sort direction. Accepted values: `ASC`, `DESC`.
 </ParamField>
 
 ---
@@ -40,23 +56,9 @@ Authorization: Bearer <your_token>
 
 <CodeGroup>
 
-```json JSON Body
-{
-  "page": 1,
-  "limit": 50,
-  "search": "Jane"
-}
-```
-
 ```bash cURL
-curl -X POST https://app.shiipp.com/api/Customers.php \
-  -H "Authorization: Bearer <your_token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "page": 1,
-    "limit": 50,
-    "search": "Jane"
-  }'
+curl "https://app.shiipp.com/api/ManageCustomers.php?page=1&limit=20&search=Jane&sort_by=last_name&sort_dir=ASC" \
+  -H "Authorization: Bearer <your_token>"
 ```
 
 </CodeGroup>
@@ -68,7 +70,6 @@ curl -X POST https://app.shiipp.com/api/Customers.php \
 ```json
 {
   "status": "success",
-  "message": "Customers retrieved successfully.",
   "data": [
     {
       "courier_customer_id": "cust-uuid",
@@ -76,17 +77,13 @@ curl -X POST https://app.shiipp.com/api/Customers.php \
       "first_name": "Jane",
       "last_name": "Smith",
       "branch": "Kingston",
-      "courier_name": "SkyDrop",
-      "courier_code": "SKY",
-      "created_at": "2024-01-01 08:00:00"
+      "is_active": 1,
+      "courier_name": "Express Couriers",
+      "created_at": "2024-01-01 08:00:00",
+      "updated_at": "2024-03-15 10:30:00"
     }
   ],
-  "meta": {
-    "total_count": 312,
-    "page": 1,
-    "limit": 50,
-    "total_pages": 7
-  }
+  "total": 312
 }
 ```
 
@@ -94,10 +91,6 @@ curl -X POST https://app.shiipp.com/api/Customers.php \
 
 <ResponseField name="status" type="string">
   `"success"` when the request was processed without error.
-</ResponseField>
-
-<ResponseField name="message" type="string">
-  A human-readable confirmation message.
 </ResponseField>
 
 <ResponseField name="data" type="array">
@@ -119,54 +112,56 @@ curl -X POST https://app.shiipp.com/api/Customers.php \
     <ResponseField name="branch" type="string">
       The branch or pickup location associated with this customer, if set.
     </ResponseField>
+    <ResponseField name="is_active" type="integer">
+      Whether the customer is active. `1` = active, `0` = inactive.
+    </ResponseField>
     <ResponseField name="courier_name" type="string">
       The name of the courier organization this customer belongs to.
-    </ResponseField>
-    <ResponseField name="courier_code" type="string">
-      Short alphanumeric code identifying the courier organization.
     </ResponseField>
     <ResponseField name="created_at" type="string">
       Timestamp when the customer record was created. Format: `YYYY-MM-DD HH:MM:SS`.
     </ResponseField>
-  </Expandable>
-</ResponseField>
-
-<ResponseField name="meta" type="object">
-  Pagination metadata for the response.
-
-  <Expandable title="Meta object fields">
-    <ResponseField name="total_count" type="integer">
-      Total number of customers matching the search term across all pages.
-    </ResponseField>
-    <ResponseField name="page" type="integer">
-      The current page number returned.
-    </ResponseField>
-    <ResponseField name="limit" type="integer">
-      The number of records per page used for this response.
-    </ResponseField>
-    <ResponseField name="total_pages" type="integer">
-      Total number of pages available given the current `limit`.
+    <ResponseField name="updated_at" type="string">
+      Timestamp when the customer record was last updated. Format: `YYYY-MM-DD HH:MM:SS`.
     </ResponseField>
   </Expandable>
 </ResponseField>
+
+<ResponseField name="total" type="integer">
+  Total number of customers matching the search term across all pages.
+</ResponseField>
+
+---
+
+## Get Branch List
+
+Append `?action=branches` to retrieve the distinct list of branch names available for the authenticated courier. This is useful for populating filter dropdowns in your UI.
+
+```
+GET /api/ManageCustomers.php?action=branches
+```
+
+```json
+{
+  "status": "success",
+  "data": ["Kingston", "Montego Bay", "Ocho Rios", "Mandeville"]
+}
+```
 
 ---
 
 ## Pagination
 
-To iterate through all customers, increment `page` until `page` equals `meta.total_pages`.
+To iterate through all customers, increment `page` until you have retrieved `total` records.
 
-```json
-{
-  "page": 2,
-  "limit": 50
-}
+```bash
+GET /api/ManageCustomers.php?page=2&limit=20
 ```
 
 <Tip>
-  If you need to retrieve all customers at once for a bulk operation, increase `limit` toward the maximum of `500`. For very large customer lists, prefer paginating in smaller chunks to avoid long response times.
+  Use the `branch` filter together with `?action=branches` to build dynamic, pre-populated dropdowns in your UI — first fetch the branch list, then filter customers by the user's selected branch.
 </Tip>
 
 <Note>
-  The `search` filter matches across `user_code`, combined full name, and email simultaneously. You do not need to know which field contains the value — a single term like `"Jane"` will surface matches in any of those fields.
+  The `search` filter matches across `user_code` and customer names simultaneously. A single term like `"Jane"` will surface matches in any of those fields.
 </Note>

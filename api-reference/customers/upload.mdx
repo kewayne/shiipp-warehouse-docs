@@ -1,7 +1,7 @@
 ---
-title: "Bulk Import Customers from a CSV File"
+title: "Bulk Import Shiipp Customers from a CSV File Upload"
 sidebarTitle: "Upload Customers"
-description: "POST /api/UploadCustomers.php — upload a CSV file to add or update customer records in bulk. Requires customer:add permission."
+description: "POST /api/UploadCustomers.php — upload a CSV to bulk-add or update customers via upsert on user_code. Columns: user_code, first_name, last_name, branch."
 ---
 
 The **UploadCustomers** endpoint lets you import or update large numbers of customer records in a single request by uploading a CSV file. The operation uses an **upsert** strategy — existing customers matched by `user_code` are updated in place, while unrecognized user codes create new records. All processing happens inside a single database transaction, so a failure on any row rolls back the entire batch.

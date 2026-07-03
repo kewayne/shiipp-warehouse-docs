@@ -62,6 +62,7 @@ CUST002,Marcus,Brown,Montego Bay
 
 - The **header row** is detected and skipped automatically.
 - The **branch** column is optional — leave it blank if not applicable, but include the column.
+- Rows with **fewer than 3 columns** (user_code, first_name, last_name) are skipped. Always include at least these three values on every data row.
 - **Upsert behavior:** if a UserCode already exists, Shiipp updates that record. If the UserCode is new, Shiipp creates a new customer.
 
 <Warning>
@@ -115,7 +116,7 @@ Use the **search bar** at the top of the Customers list to find records by:
 
 ### Advanced Fuzzy Search
 
-For approximate name matches — useful when you're unsure of the exact spelling — append `?advanced=true` to the Customers page URL. With advanced search enabled, Shiipp uses **Levenshtein distance** and **Soundex phonetic matching** to surface close matches even when names are slightly misspelled.
+For approximate name matches — useful when you're unsure of the exact spelling — append `?advanced=true` to the Customers page URL. With advanced search enabled, Shiipp surfaces close matches even when names are slightly misspelled.
 
 ### Filtering by Branch
 

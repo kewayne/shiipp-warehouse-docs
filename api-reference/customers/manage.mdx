@@ -1,10 +1,10 @@
 ---
-title: "Create, Update, and Delete Customer Records"
+title: "Create, Update, and Delete Shiipp Customer Records"
 sidebarTitle: "Manage Customers"
-description: "GET, POST, PUT, DELETE /api/ManageCustomers.php — full CRUD for customer profiles with role-scoped access, pagination, and branch filtering."
+description: "POST, PUT, DELETE /api/ManageCustomers.php — create, update, and delete customer profiles with role-scoped access and duplicate user code prevention."
 ---
 
-The **ManageCustomers** endpoint provides full create, read, update, and delete (CRUD) access to customer profiles in your Shiipp account. All operations are scoped to the authenticated user's role — courier users can only access and modify customers within their own organization.
+The **ManageCustomers** endpoint provides create, update, and delete access to customer profiles in your Shiipp account. All operations are scoped to the authenticated user's role — courier users can only access and modify customers within their own organization.
 
 ## Endpoint
 
@@ -16,57 +16,6 @@ The **ManageCustomers** endpoint provides full create, read, update, and delete 
 
 ```
 Authorization: Bearer <your_token>
-```
-
----
-
-## GET — List and Search Customers
-
-Retrieve a paginated, sortable list of customers. Supports filtering by branch and optional full-text search.
-
-### Query Parameters
-
-<ParamField query="page" type="integer" default="1">
-  Page number for paginated results.
-</ParamField>
-
-<ParamField query="limit" type="integer" default="50">
-  Number of records per page.
-</ParamField>
-
-<ParamField query="search" type="string">
-  Filter customers by user code, name, or email using a partial match.
-</ParamField>
-
-<ParamField query="branch" type="string">
-  Filter results to customers assigned to a specific branch location.
-</ParamField>
-
-<ParamField query="courier_id" type="string">
-  Filter results to a specific courier organization. **Admin and manager roles only.** Courier role users are automatically scoped to their own courier.
-</ParamField>
-
-<ParamField query="sort_by" type="string" default="created_at">
-  Field to sort results by. Accepted values: `user_code`, `first_name`, `last_name`, `branch`, `courier_name`, `created_at`, `updated_at`.
-</ParamField>
-
-<ParamField query="sort_dir" type="string" default="DESC">
-  Sort direction. Accepted values: `ASC`, `DESC`.
-</ParamField>
-
-### Get Branch List
-
-Append `?action=branches` to retrieve a distinct list of branch names available for the authenticated courier. This is useful for populating filter dropdowns in your UI.
-
-```
-GET /api/ManageCustomers.php?action=branches
-```
-
-```json
-{
-  "status": "success",
-  "data": ["Kingston", "Montego Bay", "Ocho Rios", "Mandeville"]
-}
 ```
 
 ---
@@ -135,15 +84,15 @@ curl -X POST https://app.shiipp.com/api/ManageCustomers.php \
 ```json
 {
   "status": "success",
-  "message": "Customer created successfully.",
+  "message": "Customer profile created",
   "data": {
-    "courier_customer_id": "cust-new-uuid"
+    "id": "cust-new-uuid"
   }
 }
 ```
 
 <Warning>
-  If a customer with the same `user_code` already exists in the courier account, the API returns `409 Conflict`. Use the [PUT method](#put--update-a-customer) to update an existing record, or the [Upload Customers](/api-reference/customers/upload) endpoint for upsert behavior in bulk.
+  If a customer with the same `user_code` already exists in the courier account, the API returns `409 Conflict`. Use the [PUT method](#put--update-a-customer) to update an existing record, or the [Upload Customers](/api-reference/customers/upload) endpoint for upsert behaviour in bulk.
 </Warning>
 
 ---
@@ -208,7 +157,7 @@ curl -X PUT https://app.shiipp.com/api/ManageCustomers.php \
 ```json
 {
   "status": "success",
-  "message": "Customer updated successfully."
+  "message": "Profile updated successfully."
 }
 ```
 
@@ -222,13 +171,13 @@ You can identify the target customer using either method:
 
 <Tabs>
   <Tab title="Query Parameter">
-    Pass the customer ID as a query string parameter:
+    Pass the customer UUID as a query string parameter:
     ```
     DELETE /api/ManageCustomers.php?id=cust-uuid
     ```
   </Tab>
   <Tab title="Request Body">
-    Pass the customer ID in the request body:
+    Pass the customer UUID in the request body:
     ```json
     {
       "courier_customer_id": "cust-uuid"
@@ -242,7 +191,7 @@ You can identify the target customer using either method:
 ```json
 {
   "status": "success",
-  "message": "Customer deleted successfully."
+  "message": "Customer removed from system."
 }
 ```
 
@@ -255,12 +204,11 @@ You can identify the target customer using either method:
 ## Role-Based Access
 
 <Note>
-  **Courier role users** can only list, create, update, and delete customers within their own courier organization. Admin and manager roles have cross-courier access and must pass `courier_id` when creating customers.
+  **Courier role users** can only create, update, and delete customers within their own courier organization. Admin and manager roles have cross-courier access and must pass `courier_id` when creating customers.
 </Note>
 
 | Operation | Courier Role | Manager Role | Admin Role |
 |---|---|---|---|
-| List customers | Own account only | All couriers | All couriers |
 | Create customer | Own account only | Any courier | Any courier |
 | Update customer | Own account only | Any courier | Any courier |
 | Delete customer | Own account only | Any courier | Any courier |

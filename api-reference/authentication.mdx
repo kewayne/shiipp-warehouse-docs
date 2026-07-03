@@ -1,5 +1,5 @@
 ---
-title: "API Authentication: Tokens and API Keys"
+title: "Shiipp API Authentication: Tokens, 2FA, and API Keys"
 sidebarTitle: "Authentication"
 description: "Obtain a JWT Bearer token via POST /api/login.php or use your X-API-KEY for the public Prealert endpoint. Includes 2FA flow and error codes."
 ---
@@ -95,7 +95,7 @@ $token = $response['data']['access_token'] ?? null;
       "username": "jsmith",
       "role": "courier",
       "courier_id": "courier-uuid",
-      "courier_code": "SKY",
+      "courier_code": "JLC",
       "two_factor_enabled": false
     }
   }
@@ -144,7 +144,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
       UUID of the courier account linked to this user. Present when `role` is `"courier"`.
     </ResponseField>
     <ResponseField name="courier_code" type="string">
-      Short alphanumeric code identifying the courier (e.g. `"SKY"`).
+      Short alphanumeric code identifying the courier (e.g. `"JLC"`).
     </ResponseField>
     <ResponseField name="two_factor_enabled" type="boolean">
       Whether two-factor authentication is enabled for this account. When `true`, the login flow requires a second step.
@@ -236,7 +236,8 @@ POST /api/Prealert.php?api_key=your_api_key
 
 | HTTP Code | `status` Field | Cause |
 |---|---|---|
-| `400` | `fail` | Required fields (`action`, `username`, `password`) are missing from the login request |
+| `400` | `fail` | The request body is missing or contains invalid JSON |
+| `422` | `fail` | Required fields (`username` or `password`) are absent or blank in the login request |
 | `401` | `fail` | Invalid username or password |
 | `401` | `fail` | Invalid or expired 2FA code |
 | `401` | `error` | JWT token is missing, malformed, or expired on a protected endpoint |

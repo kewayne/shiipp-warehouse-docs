@@ -1,5 +1,5 @@
 ---
-title: "Search Customers with Fuzzy and Exact Matching"
+title: "Search Shiipp Customers with Fuzzy and Exact Matching"
 sidebarTitle: "Search Customers"
 description: "GET /api/SearchCustomers.php — search customers by name, email, or user code. Supports basic LIKE search and advanced fuzzy matching with scoring."
 ---
@@ -77,7 +77,7 @@ curl "https://app.shiipp.com/api/SearchCustomers.php?q=jane+smith&limit=10" \
       "last_name": "Smith",
       "email": null,
       "courier_id": "courier-uuid",
-      "courier_name": "SkyDrop",
+      "courier_name": "Express Couriers",
       "match_score": null
     }
   ]
@@ -125,7 +125,7 @@ curl "https://app.shiipp.com/api/SearchCustomers.php?q=jayne+smyth&advanced=true
       "last_name": "Smith",
       "email": null,
       "courier_id": "courier-uuid",
-      "courier_name": "SkyDrop",
+      "courier_name": "Express Couriers",
       "match_score": 2150.0
     }
   ]

@@ -12,7 +12,7 @@ Shiipp gives you two authentication paths depending on your role: courier partne
 
 <Steps>
   <Step title="Log in and obtain your Bearer token">
-    Send a `POST` request to `/api/login.php` with your Shiipp credentials. On success, the response contains an `access_token` you will use for all subsequent requests.
+    Send a `POST` request to `/api/login.php` with your Shiipp credentials. Include `"action": "login"` along with your username and password. On success, the response contains an `access_token` you will use for all subsequent requests.
 
     **Request**
 
@@ -21,6 +21,7 @@ Shiipp gives you two authentication paths depending on your role: courier partne
     Content-Type: application/json
 
     {
+      "action": "login",
       "username": "youruser",
       "password": "yourpassword"
     }
@@ -31,18 +32,25 @@ Shiipp gives you two authentication paths depending on your role: courier partne
     ```json
     {
       "status": "success",
-      "token_type": "Bearer",
-      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-      "expires_in": 28800,
-      "user": {
-        "id": "42",
-        "username": "youruser",
-        "role": "admin"
-      }
+      "message": "Login successful",
+      "data": {
+        "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        "token_type": "Bearer",
+        "user": {
+          "id": "42",
+          "full_name": "Jane Smith",
+          "username": "youruser",
+          "role": "admin",
+          "courier_id": null,
+          "courier_code": null,
+          "two_factor_enabled": false
+        }
+      },
+      "timestamp": 1700000000
     }
     ```
 
-    Copy the value of `access_token` — you will need it in the next step.
+    Copy the value of `data.access_token` — you will need it in the next step.
   </Step>
 
   <Step title="Attach the token to every API request">
@@ -70,7 +78,7 @@ Shiipp gives you two authentication paths depending on your role: courier partne
   </Step>
 
   <Step title="Submit your first prealert">
-    With your API key in hand, submit a prealert by posting shipment details to `/api/Prealert.php`.
+    With your API key in hand, submit a prealert by posting shipment details to `/api/Prealert.php`. `UserCode` and `TrackingNumber` are required; `Vendor`, `Description`, and `Reference` are optional.
 
     **Request**
 
@@ -83,18 +91,19 @@ Shiipp gives you two authentication paths depending on your role: courier partne
       "UserCode": "CUST001",
       "TrackingNumber": "1Z9999999999999999",
       "Vendor": "Amazon",
-      "Description": "Electronics"
+      "Description": "Electronics",
+      "Reference": "ORD-2024-001"
     }
     ```
 
-    **Success response**
+    **Success response** (HTTP 201)
 
     ```json
     {
       "status": "success",
       "message": "Pre-alert logged successfully",
       "data": {
-        "prealert_id": "uuid-here"
+        "prealert_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
       }
     }
     ```

@@ -1,7 +1,7 @@
 ---
-title: "Update Package Fields via the Shiipp API"
+title: "Update Package Fields via the Shiipp Warehouse API"
 sidebarTitle: "Update Package"
-description: "POST /api/UpdatePackage.php — update package fields like weight, tracking number, and customer assignment. JWT Bearer token required."
+description: "POST /api/UpdatePackage.php — update package fields like weight, tracking number, and customer assignment. After update, the package is marked for re-sync."
 ---
 
 The **UpdatePackage** endpoint allows you to modify individual fields on an existing package record. Only the fields you include in the request body are changed — omitted fields are left untouched. This makes the endpoint safe for partial updates without needing to re-submit the full package payload.
@@ -148,7 +148,7 @@ Returned when one or more fields were changed successfully.
 
 ### Success — No Changes Detected
 
-Returned when the submitted values are identical to what's already stored. No database write occurs.
+Returned when the submitted values are identical to what's already stored. No write occurs.
 
 ```json
 {
@@ -173,10 +173,10 @@ Returned when the submitted values are identical to what's already stored. No da
 
 ---
 
-## Post-Update Sync Behavior
+## Post-Update Sync Behaviour
 
 <Warning>
-  After any successful update, the package's `is_synced` flag is automatically reset to `0`. This marks the package for re-synchronization on the next sync cycle. If your integration consumes sync status, account for this behavior when processing update events.
+  After any successful update, the package is automatically marked for re-synchronisation. If your integration monitors sync status, account for this behaviour when processing update events.
 </Warning>
 
 ---

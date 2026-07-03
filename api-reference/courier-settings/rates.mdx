@@ -1,5 +1,5 @@
 ---
-title: "Configure Courier Billing Rates via API"
+title: "Configure Shiipp Courier Weight-Tier Billing Rates"
 sidebarTitle: "Billing Rates"
 description: "GET and POST /api/GetCourierRates.php — read global and per-courier weight tier rates, save rate tables, copy defaults, and update air freight rates."
 ---
@@ -61,7 +61,7 @@ Send a `GET` request to fetch rate tables. Without a query parameter the respons
           Display name of the courier.
         </ResponseField>
         <ResponseField name="courier_code" type="string">
-          Short alphanumeric code identifying the courier (e.g. `"SKY"`).
+          Short alphanumeric code identifying the courier (e.g. `"EXP"`).
         </ResponseField>
         <ResponseField name="air_freight_rate" type="number">
           Per-lb air freight rate charged by this courier, expressed as a currency amount.
@@ -108,8 +108,8 @@ Send a `GET` request to fetch rate tables. Without a query parameter the respons
     ],
     "courier": {
       "courier_id": "courier-uuid",
-      "courier_name": "SkyDrop",
-      "courier_code": "SKY",
+      "courier_name": "Express Couriers",
+      "courier_code": "EXP",
       "air_freight_rate": 1.50,
       "specific_rates": [
         { "id": 10, "startweight": 0, "endweight": 5, "fee": 4.50 }

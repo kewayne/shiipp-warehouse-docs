@@ -1,5 +1,5 @@
 ---
-title: "Get Manifest Details and Package List"
+title: "Get Shiipp Manifest Details, Statistics, and Packages"
 sidebarTitle: "Get Manifest"
 description: "GET /api/GetManifest.php?id={manifest_id} — retrieve manifest metadata, all linked packages, and aggregate stats including weight and courier breakdown."
 ---
@@ -69,8 +69,8 @@ The response is structured into three top-level sections under `data`: `info` (m
         "first_name": "Jane",
         "last_name": "Smith",
         "user_code": "CUST001",
-        "courier_name": "SkyDrop",
-        "courier_code": "SKY",
+        "courier_name": "Express Couriers",
+        "courier_code": "EXP",
         "carrier_name": "UPS"
       }
     ],
@@ -79,8 +79,8 @@ The response is structured into three top-level sections under `data`: `info` (m
       "total_weight_lb": 97.4,
       "total_weight_kg": 44.18,
       "by_courier": {
-        "SKY": { "count": 18, "weight": 62.1, "house_color": "#065ea1" },
-        "AER": { "count": 10, "weight": 35.3, "house_color": "#e85d04" }
+        "EXP": { "count": 18, "weight": 62.1, "house_color": "#065ea1" },
+        "ACE": { "count": 10, "weight": 35.3, "house_color": "#e85d04" }
       }
     }
   }
@@ -147,7 +147,7 @@ The response is structured into three top-level sections under `data`: `info` (m
       Display name of the courier service that owns this package.
     </ResponseField>
     <ResponseField name="courier_code" type="string">
-      Short alphanumeric code identifying the courier (e.g., `SKY`).
+      Short alphanumeric code identifying the courier (e.g., `EXP`).
     </ResponseField>
     <ResponseField name="carrier_name" type="string">
       The physical carrier (e.g., UPS, FedEx) that delivered the package to the warehouse.

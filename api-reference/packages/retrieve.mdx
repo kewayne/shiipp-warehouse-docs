@@ -1,7 +1,7 @@
 ---
-title: "Retrieve and Filter Packages via API"
+title: "Retrieve and Filter Warehouse Packages — Shiipp API"
 sidebarTitle: "List Packages"
-description: "POST /api/RetrievePackages.php — query, filter, and paginate packages. Supports export to CSV and XLSX. JWT Bearer token required."
+description: "POST /api/RetrievePackages.php — query, filter, and paginate packages by tracking number, customer, courier, or date range. Export results to CSV or XLSX."
 ---
 
 The **RetrievePackages** endpoint lets you query, filter, and paginate packages stored in your Shiipp warehouse. You can narrow results by tracking number, customer details, courier, carrier, and entry date range — or export the full result set to a CSV or XLSX file for offline reporting.
@@ -133,7 +133,7 @@ curl -X POST https://app.shiipp.com/api/RetrievePackages.php \
       "shipper": "Amazon",
       "description": "Electronics",
       "entry_date_time": "2024-01-15 09:22:11",
-      "courier_name": "SkyDrop",
+      "courier_name": "Express Couriers",
       "carrier_name": "UPS",
       "manifest_number": "MAN-20240115-A3B2",
       "status": "shipped"
@@ -270,6 +270,7 @@ The exported file includes the following columns:
 | First Name | Customer first name |
 | Last Name | Customer last name |
 | Courier | Assigned courier name |
+| Courier Code | Short courier identifier |
 | Carrier | Inbound carrier name |
 | Shipper | Shipper / sender name |
 | Weight | Package weight (LBS) |
@@ -280,6 +281,33 @@ The exported file includes the following columns:
 <Tip>
   Use `export_format: "xlsx"` when sharing reports with non-technical stakeholders — Excel files preserve column types and are easier to filter in spreadsheet applications.
 </Tip>
+
+---
+
+## Dispatch Queue Action
+
+Sending `"action": "queue_dispatch"` in the request body queues the matched packages for synchronisation with your external system. You may specify packages explicitly via a `package_ids` array, or let the endpoint derive the set from your active filters.
+
+```json
+{
+  "action": "queue_dispatch",
+  "package_ids": ["pkg-uuid-1", "pkg-uuid-2"]
+}
+```
+
+```json
+{
+  "status": "success",
+  "message": "Successfully queued packages. Live sync triggered for 2 items.",
+  "data": {
+    "total_selected": 2
+  }
+}
+```
+
+<Note>
+  Once queued, packages are picked up and synced automatically. No further action is required on your part after a successful `queue_dispatch` response.
+</Note>
 
 ---
 

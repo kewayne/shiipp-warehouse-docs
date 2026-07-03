@@ -1,5 +1,5 @@
 ---
-title: "How Package Tracking Works in Shiipp"
+title: "Package Tracking and Lifecycle Management in Shiipp"
 sidebarTitle: "Packages"
 description: "Understand how Shiipp logs, tracks, and manages packages from warehouse intake through delivery, including tracking numbers, weights, and statuses."
 ---
@@ -17,11 +17,12 @@ The following fields make up a package record in Shiipp.
 | `house_number` | Internal warehouse reference number |
 | `user_code` | The identifier of the customer this package belongs to |
 | `first_name` / `last_name` | Customer name associated with the package |
-| `weight` | Weight in LBS — KG conversion is shown automatically alongside |
-| `courier_id` | The courier partner this package has been assigned to |
-| `manifest_id` | The flight manifest this package is assigned to, if any |
-| `shipper` / `vendor` | The sender or vendor the package originated from |
-| `description` | A description of the package contents |
+| `weight` | Weight in LBS |
+| `courier_name` | The name of the courier partner this package has been assigned to |
+| `courier_code` | Short code identifying the courier partner |
+| `carrier_name` | The name of the carrier (shipping company) that transported the package |
+| `manifest_number` | The reference number of the flight manifest this package is assigned to, if any |
+| `shipper` | The sender or vendor the package originated from |
 | `entry_date_time` | The date and time the package was logged into the system |
 | `status` | The current status of the package, derived from its assigned manifest |
 
@@ -63,7 +64,7 @@ Packages move through a defined set of stages from intake to delivery. Use the s
     Export any filtered view of your package list to CSV or XLSX format for reporting, reconciliation, or handoff to external systems.
   </Card>
   <Card title="Courier Assignment" icon="truck">
-    Packages are linked to a courier partner via `courier_id`, ensuring each courier only sees the packages they are responsible for.
+    Packages are linked to a courier partner, ensuring each courier only sees the packages they are responsible for.
   </Card>
 </CardGroup>
 

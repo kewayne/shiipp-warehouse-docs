@@ -23,7 +23,7 @@ Every request to a management or dashboard endpoint must carry a valid Bearer to
 
 ### Obtain a token
 
-Call `POST /api/login.php` with your credentials:
+Call `POST /api/login.php` with your credentials. The `action` field must be set to `"login"`:
 
 ```json
 {
@@ -38,21 +38,27 @@ A successful response returns:
 ```json
 {
   "status": "success",
-  "token_type": "Bearer",
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "expires_in": 28800,
-  "user": {
-    "id": "42",
-    "username": "your_username",
-    "role": "admin",
-    "courier_id": null
-  }
+  "message": "Login successful",
+  "data": {
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "token_type": "Bearer",
+    "user": {
+      "id": "42",
+      "full_name": "Jane Smith",
+      "username": "your_username",
+      "role": "admin",
+      "courier_id": null,
+      "courier_code": null,
+      "two_factor_enabled": false
+    }
+  },
+  "timestamp": 1700000000
 }
 ```
 
 ### Use the token
 
-Attach the `access_token` value to every subsequent request:
+Attach the `data.access_token` value to every subsequent request:
 
 ```http
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
@@ -84,16 +90,17 @@ const loginRes = await fetch("https://your-domain/api/login.php", {
   }),
 });
 
-const { access_token } = await loginRes.json();
+const { data } = await loginRes.json();
+const accessToken = data.access_token;
 
 // Step 2: Call a protected endpoint
 const res = await fetch("https://your-domain/api/some-endpoint", {
   headers: {
-    Authorization: `Bearer ${access_token}`,
+    Authorization: `Bearer ${accessToken}`,
   },
 });
 
-const data = await res.json();
+const result = await res.json();
 ```
 
 ```php PHP
@@ -110,8 +117,8 @@ curl_setopt_array($ch, [
         "password" => "your_password",
     ]),
 ]);
-$response     = json_decode(curl_exec($ch), true);
-$accessToken  = $response["access_token"];
+$response    = json_decode(curl_exec($ch), true);
+$accessToken = $response["data"]["access_token"];
 curl_close($ch);
 
 // Step 2: Call a protected endpoint
@@ -140,7 +147,11 @@ Send the same `POST /api/login.php` request with your username and password. Whe
 ```json
 {
   "status": "2fa_required",
-  "preauth_token": "pre_eyJhbGciOiJIUzI1NiJ9..."
+  "message": "Two-factor authentication required.",
+  "data": {
+    "preauth_token": "pre_eyJhbGciOiJIUzI1NiJ9..."
+  },
+  "timestamp": 1700000000
 }
 ```
 
@@ -171,19 +182,31 @@ Send a second `POST /api/login.php` with the `verify_2fa` action, including the 
   </Tab>
 </Tabs>
 
-A successful verification returns the standard `access_token` response:
+A successful verification returns the standard token response:
 
 ```json
 {
   "status": "success",
-  "token_type": "Bearer",
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "expires_in": 28800
+  "message": "Login successful",
+  "data": {
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "token_type": "Bearer",
+    "user": {
+      "id": "42",
+      "full_name": "Jane Smith",
+      "username": "your_username",
+      "role": "admin",
+      "courier_id": null,
+      "courier_code": null,
+      "two_factor_enabled": true
+    }
+  },
+  "timestamp": 1700000000
 }
 ```
 
 <Note>
-  The `preauth_token` is short-lived and single-use. If verification fails three consecutive times, the token is invalidated and you must restart the login flow from Step 1.
+  The `preauth_token` is short-lived (valid for 5 minutes) and single-use. If verification fails, the token is invalidated and you must restart the login flow from Step 1.
 </Note>
 
 ---

@@ -1,5 +1,5 @@
 ---
-title: "Troubleshoot Customer Sync and Webhook Errors"
+title: "Troubleshoot Shiipp Customer Sync and Webhook Errors"
 sidebarTitle: "Sync Errors"
 description: "Diagnose and fix common errors with Shiipp's automatic customer sync and outbound webhook delivery, including HTTP errors and JSON format issues."
 ---
@@ -21,7 +21,7 @@ Shiipp connects to your systems through two outbound integration channels: **cus
 </Accordion>
 
 <Accordion title="Sync failed with HTTP 500 or non-200">
-  Shiipp logs the HTTP status code and the first 300 characters of your endpoint's response body for every sync attempt. To troubleshoot:
+  Shiipp records the HTTP status code and a preview of your endpoint's response body for every sync attempt. To troubleshoot:
 
   - Check your server logs for errors that occurred during the request.
   - Ensure your endpoint returns HTTP **200** and a valid JSON body.
@@ -46,7 +46,7 @@ Shiipp connects to your systems through two outbound integration channels: **cus
   - Verify your endpoint returns the expected `UserCode` field (also accepted as `user_code`).
   - Shiipp automatically uppercases and trims `UserCode` values — `CUST001` and `cust001` are treated as identical.
   - An **empty array** response (`[]`) does not delete existing customers; it simply adds no new ones.
-  - Confirm the `last_sync` timestamp updated — this is visible in **Settings** and indicates whether the sync actually ran.
+  - Confirm the **Last Synced** timestamp updated — this is visible in **Settings > Customer Sync** and indicates whether the sync actually ran.
 </Accordion>
 
 <Accordion title="When does the sync run?">
@@ -58,7 +58,7 @@ Shiipp connects to your systems through two outbound integration channels: **cus
 <Accordion title="My webhook endpoint isn't receiving calls">
   Start by confirming your configuration and connectivity:
 
-  - Verify your webhook URL is saved in **Courier Settings** — use `api_url_add_package` for new package events and `api_url_status_update` for manifest status changes.
+  - Verify your webhook URL is saved in **Courier Settings** — set the **New Package Webhook URL** for new package events and the **Manifest Status Webhook URL** for manifest status changes.
   - Your endpoint must be **publicly accessible**. Endpoints behind a firewall, VPN, or private network will not receive Shiipp's outbound requests.
   - Check **System Logs** in Shiipp for recent dispatch attempts and their HTTP response codes.
 

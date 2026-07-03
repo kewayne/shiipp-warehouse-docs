@@ -14,6 +14,10 @@ Shiipp calculates charges for courier partners automatically based on the weight
 
 Shiipp uses a **weight tier** model. You define a set of weight ranges, each with a flat fee. When an invoice is generated, every package in the billing period is matched to the tier that covers its actual weight, and the corresponding fee is applied.
 
+<Warning>
+  A package that does not fall within **any** configured weight tier receives a fee of **$0.00**. It still appears in the invoice, but contributes nothing to the total. Make sure your tiers cover the full range of package weights you handle — gaps in coverage mean unbilled packages.
+</Warning>
+
 <Accordion title="Example weight tier table">
   | Weight range | Flat fee |
   |---|---|
@@ -92,10 +96,12 @@ You can also add an **air freight rate** — a flat per-pound or per-kilogram su
   <Step title="Review the invoice summary">
     Check the summary panel for:
 
+    - **Warehouse details** — the billing entity (your warehouse name, address, and contact information)
+    - **Courier details** — the receiving entity being invoiced
     - **Total packages** included
     - **Total weight** (LBS and KG)
-    - **Total fees** due
-    - **Per-tier breakdown** showing how many packages fell into each rate tier
+    - **Per-tier breakdown** showing how many packages fell into each rate tier and the subtotal for each
+    - **Total fees** due across all tiers
   </Step>
 
   <Step title="Apply manual adjustments (optional)">

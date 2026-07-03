@@ -1,5 +1,5 @@
 ---
-title: "Format Your Customer List for Shiipp Sync"
+title: "Customer List JSON Format and Sync Behavior in Shiipp"
 sidebarTitle: "Customer List Format"
 description: "Shiipp automatically pulls your customer list every 8 hours from an endpoint you configure. Learn the required JSON format and field names."
 ---
@@ -50,12 +50,16 @@ Shiipp recognises multiple accepted names for each field and normalises them to 
 | Accepted Field Names | Maps To | Required |
 |---|---|---|
 | `UserCode`, `user_code` | `user_code` — customer identifier | **Yes** |
-| `first_name`, `FirstName` | `first_name` | **Yes** |
-| `last_name`, `LastName` | `last_name` | **Yes** |
+| `first_name`, `FirstName` | `first_name` | Recommended |
+| `last_name`, `LastName` | `last_name` | Recommended |
 | `branch`, `Branch` | `branch` — office or location name | No |
 
 <Note>
   `UserCode` values are automatically **uppercased and trimmed** by Shiipp before matching or storing. A value of `" cust001 "` is stored as `"CUST001"`. Make sure your prealert submissions use the same normalised form.
+</Note>
+
+<Note>
+  `first_name` and `last_name` are strongly recommended. If either is missing from a record, Shiipp substitutes a placeholder value — customer records created without names may be difficult to identify in the warehouse dashboard.
 </Note>
 
 ## Sync Behavior Details
