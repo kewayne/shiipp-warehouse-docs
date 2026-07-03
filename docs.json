@@ -121,10 +121,24 @@
             ]
           }
         ]
+      },
+      {
+        "tab": "Changelog",
+        "groups": [
+          {
+            "group": "Releases",
+            "pages": [
+              "changelog/v1.0.0"
+            ]
+          }
+        ]
       }
     ]
   },
   "api": {
     "openapi": "openapi.yaml"
+  },
+  "interaction": {
+    "drilldown": true
   }
 }
