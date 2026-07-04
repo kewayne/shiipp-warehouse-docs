@@ -1,0 +1,68 @@
+---
+title: "Courier Hold / Pause Feature"
+sidebarTitle: "Managing Courier Holds"
+description: "Learn how to temporarily suspend a courier's incoming package sync and visibility during audits, disputes, or onboarding."
+---
+
+If a courier partner needs to be temporarily suspended from processing new packages (for example, during billing disputes, warehouse audits, or onboarding), you can place them on a **Hold** or **Pause**. 
+
+When a courier is placed on hold, they cannot see any new packages processed during the hold period, and those packages will not be synced to their system until explicitly released.
+
+<Note>
+  This feature is only available to **Admins** and **Warehouse Managers**. Couriers cannot modify their own hold status.
+</Note>
+
+## Pausing a Courier
+
+<Steps>
+  <Step title="Navigate to the Couriers page">
+    Open the sidebar and click on **Couriers**.
+  </Step>
+
+  <Step title="Open the Courier Settings">
+    Click on the courier you want to manage to open their **Edit Courier** drawer.
+  </Step>
+
+  <Step title="Toggle the Hold Status">
+    Scroll down to the **Operational Settings** section.
+    Find the **Pause Packages (Hold)** toggle and switch it on. The status label will change to a red **Hold**.
+  </Step>
+
+  <Step title="Save Changes">
+    Click the **Save Changes** button at the bottom of the drawer.
+  </Step>
+</Steps>
+
+## Processing Packages During a Hold
+
+Once a courier is paused, the warehouse can continue to process packages as normal using the **Scan** page. 
+
+However, any packages assigned to that courier while they are on hold will exhibit the following behaviors:
+
+- **No Immediate Sync**: The package is **not** pushed to the package dispatch queue.
+- **Hidden from Courier**: The package will not appear in the courier's shipment view or be accessible via their API.
+- **Amber Indicators**: On the Scan page and Packages list, the package will show an amber **Pause** icon instead of the usual green Sync checkmark.
+
+## Releasing Held Packages
+
+When the hold is lifted and you are ready to allow the courier to see and sync their backlogged packages, you must release the holds.
+
+### Releasing Individual Packages
+
+1. Go to the **Packages** page.
+2. Locate the held package (look for the amber Pause icon).
+3. Click the three horizontal dots (`...`) on the right side of the row.
+4. Select **Release Hold**. The package will immediately be queued for syncing and become visible to the courier.
+
+### Bulk Releasing All Held Packages
+
+If you have many packages to release, you can do it quickly using the bulk action:
+
+1. Go to the **Packages** page.
+2. (Optional) Filter the view by the specific courier using the **Couriers** dropdown.
+3. Click the amber **Release All** button at the top of the table. 
+4. Every held package currently visible on the page will be released and queued for sync instantly.
+
+<Warning>
+  Couriers are strictly prevented from bypassing the hold feature. Even if they attempt to export data or manually hit the sync API endpoint with specific package IDs, the backend safeguards will block them from accessing held packages.
+</Warning>

@@ -53,7 +53,8 @@
               "guides/building-manifests",
               "guides/designing-labels",
               "guides/billing-and-invoicing",
-              "guides/customer-management"
+              "guides/customer-management",
+              "guides/courier-hold-management"
             ]
           },
           {
