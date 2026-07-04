@@ -5,10 +5,10 @@ info:
   version: 1.0.0
 
 servers:
-  - url: https://api.aeoral.com
+  - url: https://wh.shiipp.com
     description: Production
 
-  - url: https://staging.api.aeoral.com
+  - url: https://dev.aeoral.com
     description: Staging
     
 paths:
