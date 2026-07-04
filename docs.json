@@ -51,6 +51,7 @@
             "pages": [
               "guides/scanning-packages",
               "guides/building-manifests",
+              "guides/designing-labels",
               "guides/billing-and-invoicing",
               "guides/customer-management"
             ]

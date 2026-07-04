@@ -1,0 +1,54 @@
+---
+title: "Create and Design Labels"
+sidebarTitle: "Designing Labels"
+description: "Step-by-step guide for creating and customizing package labels using Shiipp's built-in drag-and-drop Label Designer."
+---
+
+Shiipp includes a powerful, native Label Designer that allows you to create custom barcode labels tailored for your thermal printers. You can customize fonts, layout, insert package data dynamically, and seamlessly inject courier logos.
+
+<Note>
+  This guide is for **warehouse staff and administrators**. You must be logged in with appropriate permissions to access the Label Designer.
+</Note>
+
+## Using the Label Designer
+
+<Steps>
+  <Step title="Navigate to the Label Designer">
+    Open the sidebar and click **Label Designer**. 
+  </Step>
+
+  <Step title="Start a New Template or Load an Existing One">
+    Use the dropdown menu at the top to select an existing label template to modify, or click **New Template** to start from a blank canvas.
+  </Step>
+
+  <Step title="Add Static Elements">
+    On the left sidebar, use the **Static Elements** panel to drag and drop basic shapes onto the canvas:
+    - **Text**: Static text fields (e.g., return addresses).
+    - **Box**: Draw borders or containers for your layout.
+    - **Horiz Line**: Separators for logical sections of the label.
+    - **Image**: Upload custom static imagery like your warehouse logo.
+  </Step>
+
+  <Step title="Insert Dynamic Package Data">
+    Under **Package Details**, click any button to insert a dynamic placeholder. During printing, these placeholders are automatically replaced with the real data from the scanned package:
+    - `{{tracking_number}}`: The package tracking number
+    - `{{customer_name}}`: The recipient's full name
+    - `{{house_number}}`: The assigned house number for routing
+    - `{{weight}}`: The package weight
+    - `{{shipper}}`: The vendor/shipper
+    - `{{date}}`: The current printing date
+  </Step>
+
+  <Step title="Add Barcodes and QR Codes">
+    Under **Scannable Codes**, insert tracking barcodes or QR codes. By default, these encode the package's tracking number. However, you can select the barcode in the workspace and use the right-hand **Properties** panel to change the **Data / Text** field to encode any dynamic value (e.g., `{{house_number}}`).
+  </Step>
+
+  <Step title="Preview Your Label">
+    Click the **Preview Print** button at the top. Shiipp will generate a live print-ready view of your layout injected with mock data. This lets you precisely verify text wrapping and barcode scaling before taking the label live.
+  </Step>
+
+  <Step title="Save and Apply">
+    Click **Save Template**, give your layout a name (if it's new), and confirm. 
+    If you want this layout to be the default for all scanned packages, ensure it is set as the active template in your configuration.
+  </Step>
+</Steps>
