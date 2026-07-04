@@ -10,6 +10,9 @@ servers:
 
   - url: https://dev.aeoral.com
     description: Staging
+
+  - url: https://dev1.aeoral.com
+    description: Staging1
     
 paths:
   /api/Prealert:
