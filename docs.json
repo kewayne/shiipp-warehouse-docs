@@ -50,6 +50,7 @@
             "group": "Guides",
             "pages": [
               "guides/scanning-packages",
+              "guides/unknown-packages",
               "guides/building-manifests",
               "guides/designing-labels",
               "guides/billing-and-invoicing",
