@@ -6,14 +6,14 @@ description: "Learn how Shiipp handles unknown packages and the streamlined clai
 
 When a package is shipped by a customer who forgets to include their mailbox number or User Code on the shipping label, Shiipp cannot automatically match the tracking number to their account. When the package is scanned at the warehouse, the **User Code** field stays blank, and the package is flagged as **unknown**.
 
-These packages are saved to the system but cannot be assigned to a manifest until they are linked to a customer. They appear in the main **Packages** list, clearly flagged with an **UNK** badge.
+These packages are saved to the system but cannot be assigned to a manifest until they are linked to a customer. They appear in the main **Packages** list, clearly flagged with an <span style={{ backgroundColor: '#fffbeb', color: '#b45309', padding: '2px 4px', borderRadius: '4px', border: '1px solid #fde68a', fontSize: '10px', fontWeight: 'bold' }}>UNK</span> badge.
 
 ## The Unknown Package Claiming Process
 
 To efficiently resolve unknown packages and get them ready for manifesting, Shiipp features a robust, multi-role claiming workflow.
 
-### 1. Courier Self-Service Claims
-Couriers can browse a list of unknown packages in their dashboard. If they recognize a package that belongs to one of their customers, they can submit a claim. 
+### 1. Courier Self-Service Claims <Icon icon="shield-exclamation" color="#f59e0b" />
+Couriers can browse a list of unknown packages in their dashboard. If they recognize a package that belongs to one of their customers, they can click the Claim icon to submit a claim. 
 
 To prevent unauthorized claims, the courier **must verify ownership**. They can do this in two ways:
 - **Security Check**: Providing the last 6 digits of the tracking number.
