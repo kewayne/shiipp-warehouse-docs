@@ -21,6 +21,7 @@
         "groups": [
           {
             "group": "Get Started",
+            "icon": "rocket",
             "pages": [
               "introduction",
               "quickstart",
@@ -29,6 +30,7 @@
           },
           {
             "group": "Core Concepts",
+            "icon": "lightbulb",
             "pages": [
               "concepts/roles-and-permissions",
               "concepts/packages-and-tracking",
@@ -38,6 +40,7 @@
           },
           {
             "group": "Courier Integration",
+            "icon": "truck-fast",
             "pages": [
               "courier/overview",
               "courier/api-keys",
@@ -48,6 +51,7 @@
           },
           {
             "group": "Guides",
+            "icon": "book-open",
             "pages": [
               "guides/scanning-packages",
               "guides/unknown-packages",
@@ -60,6 +64,7 @@
           },
           {
             "group": "FAQ & Troubleshooting",
+            "icon": "circle-question",
             "pages": [
               "faq/common-issues",
               "faq/sync-errors"
@@ -72,6 +77,7 @@
         "groups": [
           {
             "group": "Overview",
+            "icon": "eye",
             "pages": [
               "api-reference/overview",
               "api-reference/authentication"
@@ -79,6 +85,7 @@
           },
           {
             "group": "Prealerts",
+            "icon": "bell",
             "pages": [
               "api-reference/prealerts/submit",
               "api-reference/prealerts/manage",
@@ -87,6 +94,7 @@
           },
           {
             "group": "Packages",
+            "icon": "box",
             "pages": [
               "api-reference/packages/retrieve",
               "api-reference/packages/update"
@@ -94,6 +102,7 @@
           },
           {
             "group": "Customers",
+            "icon": "users",
             "pages": [
               "api-reference/customers/list",
               "api-reference/customers/manage",
@@ -103,6 +112,7 @@
           },
           {
             "group": "Manifests",
+            "icon": "clipboard-list",
             "pages": [
               "api-reference/manifests/create",
               "api-reference/manifests/get",
@@ -111,6 +121,7 @@
           },
           {
             "group": "Billing",
+            "icon": "file-invoice-dollar",
             "pages": [
               "api-reference/billing/generate-invoice",
               "api-reference/billing/load-bills"
@@ -118,6 +129,7 @@
           },
           {
             "group": "Courier Settings",
+            "icon": "gear",
             "pages": [
               "api-reference/courier-settings/profile",
               "api-reference/courier-settings/rates"
@@ -130,6 +142,7 @@
         "groups": [
           {
             "group": "Releases",
+            "icon": "bullhorn",
             "pages": [
               "changelog/v1.0.0"
             ]
