@@ -56,12 +56,14 @@ When the hold is lifted and you are ready to allow the courier to see and sync t
 
 ### Bulk Releasing All Held Packages
 
-If you have many packages to release, you can do it quickly using the bulk action:
+If a courier has many held packages, you can release all of them at once directly from their profile:
 
-1. Go to the **Packages** page.
-2. (Optional) Filter the view by the specific courier using the **Couriers** dropdown.
-3. Click the amber **Release All** button at the top of the table. 
-4. Every held package currently visible on the page will be released and queued for sync instantly.
+1. Go to the **Couriers** page.
+2. Click on the courier to open their details.
+3. Scroll down to the **Operational Settings** > **Pause Packages (Hold)** section. 
+4. If there are held packages, you will see an amber notification displaying the count, along with a **Release All Held** button.
+5. Click the **Release All Held** button. It will turn red and prompt you to "Click to Confirm".
+6. Click it a second time to confirm. All held packages for that courier will be released and queued for sync instantly.
 
 <Warning>
   Couriers are strictly prevented from bypassing the hold feature. Even if they attempt to export data or manually hit the sync API endpoint with specific package IDs, the backend safeguards will block them from accessing held packages.
