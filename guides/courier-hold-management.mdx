@@ -4,7 +4,7 @@ sidebarTitle: "Managing Courier Holds"
 description: "Learn how to temporarily suspend a courier's incoming package sync and visibility during audits, disputes, or onboarding."
 ---
 
-If a courier partner needs to be temporarily suspended from processing new packages (for example, during billing disputes, warehouse audits, or onboarding), you can place them on a **Hold** or **Pause**. 
+If a courier partner needs to be temporarily suspended from processing new packages (for example, during billing disputes, warehouse audits, or onboarding), you can place them on a **Hold** or **Pause**.
 
 When a courier is placed on hold, they cannot see any new packages processed during the hold period, and those packages will not be synced to their system until explicitly released.
 
@@ -18,16 +18,12 @@ When a courier is placed on hold, they cannot see any new packages processed dur
   <Step title="Navigate to the Couriers page">
     Open the sidebar and click on **Couriers**.
   </Step>
-
   <Step title="Open the Courier Settings">
     Click on the courier you want to manage to open their **Edit Courier** drawer.
   </Step>
-
   <Step title="Toggle the Hold Status">
-    Scroll down to the **Operational Settings** section.
-    Find the **Pause Packages (Hold)** toggle and switch it on. The status label will change to a red **Hold**.
+    Scroll down to the **Operational Settings** section. Find the **Pause Packages (Hold)** toggle and switch it on. The status label will change to a red **Hold**.
   </Step>
-
   <Step title="Save Changes">
     Click the **Save Changes** button at the bottom of the drawer.
   </Step>
@@ -35,7 +31,7 @@ When a courier is placed on hold, they cannot see any new packages processed dur
 
 ## Processing Packages During a Hold
 
-Once a courier is paused, the warehouse can continue to process packages as normal using the **Scan** page. 
+Once a courier is paused, the warehouse can continue to process packages as normal using the **Scan** page.
 
 However, any packages assigned to that courier while they are on hold will exhibit the following behaviors:
 
@@ -60,8 +56,16 @@ If a courier has many held packages, you can release all of them at once directl
 
 1. Go to the **Couriers** page.
 2. Click on the courier to open their details.
-3. Scroll down to the **Operational Settings** > **Pause Packages (Hold)** section. 
+3. Scroll down to the **Operational Settings** \> **Pause Packages (Hold)** section.
 4. If there are held packages, you will see an amber notification displaying the count, along with a **Release All Held** button.
+   <Frame>
+     <img
+       src="/images/image-3.png"
+       alt="Image"
+       title="Image"
+       style={{ width:"42%" }}
+     />
+   </Frame>
 5. Click the **Release All Held** button. It will turn red and prompt you to "Click to Confirm".
 6. Click it a second time to confirm. All held packages for that courier will be released and queued for sync instantly.
 
