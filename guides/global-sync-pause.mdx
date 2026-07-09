@@ -1,14 +1,14 @@
 ---
-title: 'Global Sync Pause'
-description: 'Learn how to pause and resume package synchronization.'
-icon: 'pause-circle'
+title: "Global Sync Pause"
+description: "Learn how to pause and resume package synchronization."
+icon: "pause-circle"
 ---
 
 # Global Sync Pause
 
-Shiipp's **Global Sync Pause** feature allows administrators and managers to temporarily halt the automatic processing and synchronization of packages, manifests, and customer data. 
+Shiipp's **Global Sync Pause** feature allows administrators and managers to temporarily halt the automatic processing and synchronization of packages, manifests, and customer data.
 
-This is incredibly useful when you need to perform system maintenance, hold off on sending updates to courier partners, or temporarily stop automated actions across the platform. 
+This is incredibly useful when you need to perform system maintenance, hold off on sending updates to courier partners, or temporarily stop automated actions across the platform.
 
 ## How It Works
 
@@ -23,7 +23,16 @@ You can control the sync state directly from the Intake interface.
 1. Navigate to the **Scan** page in your dashboard.
 2. Look at the top right of the metrics bar, next to the **Sync Delay** indicator.
 3. You will see a button indicating the current status (either `Sync Active` or `Sync Paused`).
-4. Click the button to toggle the state. 
+4. Click the button to toggle the state.
+
+<Frame>
+  <img
+    src="/images/SYNC.gif"
+    alt="SYNC"
+    title="SYNC"
+    style={{ width:"68%" }}
+  />
+</Frame>
 
 <Info>
   **Note on Data Safety**: When syncing is paused, staff can continue scanning and logging packages normally. All scanned packages are securely saved. When you click **Resume**, the system will automatically process everything in the background. No work is lost during a pause.
@@ -32,6 +41,7 @@ You can control the sync state directly from the Intake interface.
 ## Role Requirements
 
 To toggle the sync state, your user account must have one of the following roles:
+
 - `admin`
 - `manager`
 - `warehouse`
