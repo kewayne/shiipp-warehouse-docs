@@ -1,32 +1,32 @@
 ---
 title: 'Global Sync Pause'
-description: 'Learn how to pause and resume background synchronization.'
+description: 'Learn how to pause and resume package synchronization.'
 icon: 'pause-circle'
 ---
 
 # Global Sync Pause
 
-Shiipp's **Global Sync Pause** feature allows administrators to temporarily halt the background processing of packages, manifests, and customer data. 
+Shiipp's **Global Sync Pause** feature allows administrators and managers to temporarily halt the automatic processing and synchronization of packages, manifests, and customer data. 
 
-This is incredibly useful when you need to perform system maintenance, update credentials for a courier API, or troubleshoot a backend issue without background tasks firing off.
+This is incredibly useful when you need to perform system maintenance, hold off on sending updates to courier partners, or temporarily stop automated actions across the platform. 
 
 ## How It Works
 
-The Shiipp unified worker continuously polls Redis and the database for sync tasks. When Global Pause is enabled, the worker safely skips these heavy operations and idles, while continuing to process mission-critical items like email notifications.
+When Global Pause is enabled, the system safely holds all pending tasks and waits. It will stop dispatching new package updates, but it continues to safely store any new packages logged by staff so that you never lose data.
 
-Because the system leverages a centralized Redis key, the pause state propagates **instantly** to all active worker instances.
+Once you resume synchronization, the system will immediately catch up and process all the packages that were placed on hold during the pause.
 
 ## Toggling the Pause State
 
 You can control the sync state directly from the Intake interface.
 
-1. Navigate to the **Scan** page.
+1. Navigate to the **Scan** page in your dashboard.
 2. Look at the top right of the metrics bar, next to the **Sync Delay** indicator.
 3. You will see a button indicating the current status (either `Sync Active` or `Sync Paused`).
 4. Click the button to toggle the state. 
 
 <Info>
-  **Note on Data Safety**: When syncing is paused, all packages logged by staff will continue to be securely stored in the database. When you click **Resume**, the worker will immediately begin churning through the queue to catch up. No data is lost during a pause.
+  **Note on Data Safety**: When syncing is paused, staff can continue scanning and logging packages normally. All scanned packages are securely saved. When you click **Resume**, the system will automatically process everything in the background. No work is lost during a pause.
 </Info>
 
 ## Role Requirements
@@ -36,8 +36,8 @@ To toggle the sync state, your user account must have one of the following roles
 - `manager`
 - `warehouse`
 
-If you do not have the required role, the action will be blocked.
+If you do not have the required role, you will not be able to change the sync state.
 
-## Multi-Instance Synchronization
+## Team Synchronization
 
-If multiple administrators are using the platform simultaneously, the state of the toggle button is synced across all browsers every 15 seconds. If one administrator pauses the sync, the button will automatically update to `Sync Paused` on everyone else's screen.
+If multiple administrators or managers are using the platform simultaneously, the state of the toggle button is synced across all browsers. If one administrator pauses the sync, the button will automatically update to `Sync Paused` on everyone else's screen within seconds.
