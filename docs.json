@@ -60,7 +60,8 @@
               "guides/billing-and-invoicing",
               "guides/customer-management",
               "guides/courier-hold-management",
-              "guides/global-sync-pause"
+              "guides/global-sync-pause",
+              "guides/package-audit-logging"
             ]
           },
           {
