@@ -59,7 +59,8 @@
               "guides/designing-labels",
               "guides/billing-and-invoicing",
               "guides/customer-management",
-              "guides/courier-hold-management"
+              "guides/courier-hold-management",
+              "guides/global-sync-pause"
             ]
           },
           {
