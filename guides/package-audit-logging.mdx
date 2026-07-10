@@ -3,23 +3,32 @@ title: "Package Audit Logging & Edit Tracking"
 description: "How to use the new edit history and sync log features to track package modifications."
 ---
 
-# Package Audit Logging
+# Package Audit Logging 
 
-In **v1.1.9**, we introduced a comprehensive Audit Logging system to explicitly track changes made to packages. This is particularly crucial for identifying edits made *after* a package has already been synchronized with a courier API.
+In **v1.1.9**, we introduced a comprehensive Audit Logging system to explicitly track changes made to packages. This is particularly crucial for identifying edits made _after_ a package has already been synchronized with a courier API.
+
+<Frame>
+  ![Image](/images/image-7.png)
+</Frame>
 
 ## Overview
 
 Whenever a critical field on a package is modified (e.g., Weight, Shipper, Customer Info, Tracking Number), the system records an immutable audit log. 
 
 This log captures:
+
 - **Date and Time** of the change.
 - The **User** who made the change.
 - The specific **Field** that was altered.
 - The **Old Value** and the **New Value**.
 
+<Frame>
+  ![Image](/images/image-5.png)
+</Frame>
+
 ### Sync State Preservation
-Previously, updating a package would forcefully reset its `is_synced` status to `0` (Pending Sync). 
-With the new audit logging system, **package edits no longer strip the synchronized status**. The package remains `is_synced = 1`, but any modifications are accurately recorded and flagged.
+
+Previously, updating a package would forcefully reset its `is_synced` status to `0` (Pending Sync). With the new audit logging system, **package edits no longer strip the synchronized status**. The package remains `is_synced = 1`, but any modifications are accurately recorded and flagged.
 
 ## Viewing the Edit History
 
@@ -32,5 +41,6 @@ With the new audit logging system, **package edits no longer strip the synchroni
 ## Sync Logs Revamp
 
 In addition to edit tracking, the **Sync Logs** (found at the bottom of the Package Details modal) have been completely redesigned for easier debugging:
+
 - **Side-by-Side View**: Clicking the **Details** button on a sync log entry now expands a full-width JSON viewer.
 - **Request & Response**: You can now view the exact Request Payload sent to the courier alongside the raw Response Body returned by the courier API, formatted with proper syntax highlighting.
