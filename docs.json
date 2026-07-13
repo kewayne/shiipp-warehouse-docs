@@ -46,7 +46,8 @@
               "courier/api-keys",
               "courier/customer-list-format",
               "courier/submitting-prealerts",
-              "courier/webhook-payload-builder"
+              "courier/webhook-payload-builder",
+              "courier/claiming-packages"
             ]
           },
           {
